@@ -10,8 +10,8 @@
 A Python agent that:
 1. **Observes** — reads OD600 growth data from the workcell via MCP
 2. **Decides** — uses an optimization algorithm to choose the next media composition
-3. **Acts** — generates a transfer array, uploads a workflow, and runs it on the workcell
-4. **Loops** — waits for results and repeats
+3. **Acts** — generates a transfer array and instantiates the workflow with those inputs
+4. **Loops** — waits for operator approval + workflow completion, then repeats
 
 This is real biology running on a real robot. Each iteration takes 60–90 minutes.
 
@@ -151,8 +151,9 @@ result = poll_workflow_completion(client, uuid, timeout_minutes=180,
 ```python
 from monomer.datasets import fetch_absorbance_results, parse_od_results
 
-raw = fetch_absorbance_results(client, "GD-R1-20260314", column_index=1)
-parsed = parse_od_results(raw, column_index=1)
+# column_index matches the column you filled — iteration 1 → column 2, iteration 2 → column 3, etc.
+raw = fetch_absorbance_results(client, "GD-R1-20260314", column_index=2)
+parsed = parse_od_results(raw, column_index=2)
 
 print(f"Control OD: {parsed['control_od']:.3f}")
 print(f"Center OD:  {parsed['center_od']:.3f}")
@@ -201,7 +202,12 @@ The template validates your inputs (transfer count, well conflicts, volumes) bef
 
 ## Workcell Constraints
 
-- **Workflow approval:** A Monomer team member must approve each workflow before it runs. Keep iterations under 30 minutes and don't queue more than 2 at a time.
-- **Tip limits:** Each tip rack has 96 tips. Track consumption across iterations.
-- **Workcell sharing:** Other teams are using the workcell too. Coordinate with the Monomer team on scheduling.
-- **Volume range:** P50 for ≤50 µL, P200 for 51–200 µL. Stay within these.
+- **Workflow approval:** Every workflow goes to `pending_approval` after instantiation. A Monomer team member will approve it from the workcell UI — typically within a few minutes during the hackathon. `poll_workflow_completion()` handles the wait automatically; your agent just blocks until it hears back. If nothing happens after 10 minutes, flag the Monomer team member on site.
+
+- **One workflow at a time:** The workcell runs workflows sequentially. Don't queue more than one ahead — wait for the current one to complete before instantiating the next.
+
+- **Tip and reagent tracking:** Handled internally by the workflow template. You don't need to count tips or reagent wells — the template computes consumption from your transfer array.
+
+- **Workcell sharing:** Other teams may be using the workcell. If your workflow is queued but not starting, check with the Monomer team — there may be a preceding workflow to wait for.
+
+- **Volume limits:** Enforce these in your transfer array. P50 handles 1–50 µL, P200 handles 51–200 µL. `apply_constraints()` keeps supplement volumes within the valid range.

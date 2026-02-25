@@ -32,7 +32,7 @@ Constraints:
 - Novel Bio must be ≥ 90 µL (floor to maintain viability)
 - All volumes are integers (µL resolution)
 - Sum of all components = exactly 180 µL
-- Supplements drawn from a reagent plate (24-well deep well, modeled as 96-well)
+- Supplements drawn from a reagent plate loaded onto the workcell (default: GD Compound Stock Plate)
 
 ### Reagent Well Map (reagent plate)
 ```
@@ -56,14 +56,14 @@ CulturePlate        →  tracked plate with barcode, history of readings
 
 ### Available Routines (Track 2A)
 
-| Emoji | Action | Key Parameters |
-|-------|--------|----------------|
-| 🧪 | **Create media mixture** | `plate_barcode`, `transfer_array` |
-| 💧 | **Media change / seed** | `culture_plate_barcode`, `seed_well`, `dest_wells`, `volume_ul` |
-| 🌡️ | **Incubate** | `plate_barcode`, `duration_minutes`, `temperature_celsius` |
-| 🔬 | **Plateread** (OD600) | `plate_barcode`, `wells_to_read` |
+| Routine Name | Purpose | Key Parameters |
+|---|---|---|
+| **GD Iteration Combined** | Reagent transfers + seed cells from warm well + pre-warm next seed well | `experiment_plate_barcode`, `reagent_type`, `transfer_array`, `seed_well`, `seed_dest_wells` |
+| **Measure Absorbance** | Read OD600 from a set of wells | `culture_plate_barcode`, `method_name` (`96wp_od600`), `wells_to_process` |
 
-A workflow is a sequence of these routines, defined as a Python file and uploaded via MCP.
+Contestants do not call these directly — they are wired up inside `workflow_definition_template.py`. The template handles all parameter mapping, tip computation, and scheduling constraints.
+
+A workflow is a sequence of routine references, defined as a Python file registered once per session and instantiated per iteration via MCP.
 
 ### Plate Barcode Convention
 ```
@@ -137,13 +137,13 @@ from monomer.mcp_client import McpClient
 client = McpClient("http://192.168.68.55:8080")
 client.connect()  # optional — auto-connects on first call
 
+# Explore what's on the workcell
 plates = client.call_tool("list_culture_plates", {})
-instance = client.call_tool("instantiate_workflow", {
-    "definition_id": 42,
-    "inputs": {"plate_barcode": "GD-R1-20260314"},
-    "reason": "Round 1 gradient descent"
-})
+routines = client.call_tool("list_available_routines", {})
+definitions = client.call_tool("list_workflow_definitions", {})
 ```
+
+For registering and running workflows, use the higher-level `monomer/workflows.py` helpers — they handle file upload, ID lookup, input merging, and polling.
 
 ### `workflows.py` — register, launch, poll
 ```python
@@ -174,22 +174,31 @@ result = poll_workflow_completion(client, uuid, timeout_minutes=180)
 ```python
 from monomer.datasets import fetch_absorbance_results, parse_od_results
 
-raw = fetch_absorbance_results(client, plate_barcode="GD-R1-20260314", column_index=1)
-# raw = {"baseline": {"A1": 0.05, ...}, "endpoint": {"A1": 1.2, ...}}
+# column_index = iteration + 1 (col 1 = seed wells; experiments start at col 2)
+raw = fetch_absorbance_results(client, plate_barcode="GD-R1-20260314", column_index=2)
+# raw = {"baseline": {"A2": 0.05, ...}, "endpoint": {"A2": 1.2, ...}}
 
-parsed = parse_od_results(raw, column_index=1)
+parsed = parse_od_results(raw, column_index=2)
 # parsed = {"control_od": 1.1, "center_od": 0.9, "perturbed_ods": {"Glucose": [1.3, 1.2], ...}}
 ```
 
 ### `transfers.py` — media composition helpers
 ```python
-from monomer.transfers import generate_transfer_array, apply_constraints
+from monomer.transfers import generate_transfer_array, apply_constraints, ROWS
 
 center = {"Glucose": 20, "NaCl": 10, "MgSO4": 5}  # µL
 center = apply_constraints(center)  # clamp to valid ranges
 
-transfers = generate_transfer_array(center, column_index=1, delta=10)
-# transfers = [["D1", "A1", 180], ["D1", "B1", 145], ["A1", "B1", 20], ...]
+# column_index = iteration + 1 (experiments start at col 2, col 1 = seed wells)
+transfers = generate_transfer_array(center, column_index=2, delta=10)
+# transfers = [["D1", "A2", 180], ["D1", "B2", 145], ["A1", "B2", 20], ...]
+
+# Seed/column helpers
+iteration = 1
+column_index  = iteration + 1                                        # 2
+dest_wells    = [f"{r}{column_index}" for r in ROWS]                 # ["A2".."H2"]
+seed_well     = f"{ROWS[iteration - 1]}1"                            # "A1"
+next_seed_well = f"{ROWS[iteration]}1" if iteration < len(ROWS) else ""  # "B1"
 ```
 
 ---
