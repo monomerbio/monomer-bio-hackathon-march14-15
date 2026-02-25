@@ -148,10 +148,26 @@ instance = client.call_tool("instantiate_workflow", {
 ### `workflows.py` — register, launch, poll
 ```python
 from monomer.workflows import register_workflow, instantiate_workflow, poll_workflow_completion
+import json
 
-def_id = register_workflow(client, Path("workflow_definition.py"), iteration=1)
-uuid = instantiate_workflow(client, def_id, plate_barcode="GD-R1-20260314")
-result = poll_workflow_completion(client, uuid, timeout_minutes=120)
+# Register the workflow template ONCE per session
+def_id = register_workflow(client, Path("examples/workflow_definition_template.py"), name="My GD Agent")
+
+# Each iteration: instantiate with your agent's outputs as extra_inputs
+uuid = instantiate_workflow(
+    client,
+    definition_id=def_id,
+    plate_barcode="GD-R1-20260314",
+    extra_inputs={
+        "transfer_array":   json.dumps(transfers),      # [[src_well, dst_well, vol_uL], ...]
+        "dest_wells":       json.dumps(dest_wells),     # wells filled this iteration
+        "monitoring_wells": json.dumps(all_wells),      # cumulative — grows each round
+        "seed_well":        "A1",                       # advances each iteration
+        "next_seed_well":   "B1",
+    },
+    reason="Iteration 1: testing Glucose=20µL, NaCl=10µL",
+)
+result = poll_workflow_completion(client, uuid, timeout_minutes=180)
 ```
 
 ### `datasets.py` — fetch OD600 results
@@ -211,11 +227,11 @@ Output: a specific experimental plan (which concentrations, how many wells, what
 Build an agent that:
 1. Reads current OD600 results from the workcell
 2. Decides what media composition to test next (gradient descent, Bayesian optimization, etc.)
-3. Generates a transfer array and workflow definition
-4. Uploads and runs the workflow via MCP
-5. Waits for results and loops
+3. Generates a transfer array and instantiates the workflow with those inputs via MCP
+4. Waits for operator approval and workflow completion
+5. Loops back to step 1
 
-The `monomer/` library handles steps 3–5. Your agent logic goes in step 1–2.
+The `monomer/` library handles steps 3–4. Register `workflow_definition_template.py` once; your agent generates `transfer_array` and other inputs each iteration and passes them to `instantiate_workflow(extra_inputs={...})`.
 
 ---
 

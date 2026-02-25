@@ -96,27 +96,53 @@ from monomer.transfers import generate_transfer_array, apply_constraints
 center = {"Glucose": 20, "NaCl": 10, "MgSO4": 15}
 center = apply_constraints(center)  # ensure volumes are valid
 
-# Generate transfers for 8 wells in column 1
+# Generate transfers for 8 wells in column 2 (col 1 is reserved for seed wells)
 # Layout: A=control, B=center, C/D=+Glucose, E/F=+NaCl, G/H=+MgSO4
-transfers = generate_transfer_array(center, column_index=1, delta=10)
+transfers = generate_transfer_array(center, column_index=2, delta=10)
 ```
 
-### Step 3: Upload and Run a Workflow
+### Step 3: Register Template and Run Each Iteration
+
+The workflow definition is registered **once** at session start. Each iteration you instantiate it with fresh inputs — no file regeneration needed.
 
 See `examples/basic_agent.py` for a complete working example.
 
 ```python
+import json
 from monomer.workflows import register_workflow, instantiate_workflow, poll_workflow_completion
+from monomer.transfers import ROWS
 from pathlib import Path
 
-# Register your workflow definition
-def_id = register_workflow(client, Path("workflow_definition.py"), iteration=1)
+# ── Register ONCE at session start ──────────────────────────────────────────
+def_id = register_workflow(
+    client,
+    Path("examples/workflow_definition_template.py"),
+    name="My GD Agent",
+)
 
-# Launch it
-uuid = instantiate_workflow(client, def_id, plate_barcode="GD-R1-20260314")
+# ── Each iteration: instantiate with your agent's outputs ───────────────────
+iteration = 1
+column_index = iteration + 1          # col 1 = seeds; experiments start at col 2
+dest_wells = [f"{r}{column_index}" for r in ROWS]
+seed_well = f"{ROWS[iteration - 1]}1" # A1 → B1 → C1 ... advances each round
+next_seed_well = f"{ROWS[iteration]}1" if iteration < len(ROWS) else ""
 
-# Wait for completion
-result = poll_workflow_completion(client, uuid, timeout_minutes=120,
+uuid = instantiate_workflow(
+    client,
+    definition_id=def_id,
+    plate_barcode="GD-R1-20260314",
+    extra_inputs={
+        "transfer_array":   json.dumps(transfers),
+        "dest_wells":       json.dumps(dest_wells),
+        "monitoring_wells": json.dumps(dest_wells),  # grows cumulatively each round
+        "seed_well":        seed_well,
+        "next_seed_well":   next_seed_well,
+    },
+    reason=f"Iteration {iteration}: center={json.dumps(center)}",
+)
+
+# Wait for completion (~60–90 min)
+result = poll_workflow_completion(client, uuid, timeout_minutes=180,
     on_status=lambda s, t: print(f"  {t//60}m: {s}"))
 ```
 
@@ -152,23 +178,24 @@ center = apply_constraints(center)
 
 ## Workflow Definition Format
 
-Workflows are Python files that define a sequence of routines. You upload them to the workcell via MCP. See `examples/workflow_definition_template.py` for a complete template.
+A workflow definition is a Python file with a `build_definition()` function. The function accepts typed parameters — your agent passes them at instantiation time, so you only ever upload the file once.
 
-Key structure:
 ```python
-# Injected by MCP server at runtime
-MONOMER_PARAMS = '{}'
-
-# Your iteration-specific values (written by generate_workflow_definition())
-TRANSFER_ARRAY = "[[...]]"
-DEST_COLUMN_INDEX = 1
-
-# Tip consumption (required for scheduler)
-P50_TIPS_TO_CONSUME = 13
-P200_TIPS_TO_CONSUME = 1
-P1000_TIPS_TO_CONSUME = 0
-REAGENT_WELLS_TO_CONSUME = 4
+def build_definition(
+    plate_barcode: str,           # always required
+    transfer_array: str = "[]",   # your reagent transfers this iteration
+    dest_wells: str = "...",      # wells being filled
+    monitoring_wells: str = "...",# cumulative — all wells measured so far
+    seed_well: str = "A1",        # advances A1 → B1 → C1 ... each round
+    next_seed_well: str = "B1",   # pre-warms the next seed well
+    reagent_type: str = "...",    # identifies your stock plate
+    monitoring_readings: int = 9, # 9 × 10 min = 90 min window
+    ...
+) -> WorkflowDefinitionDescriptor:
+    # builds the routine sequence and returns it
 ```
+
+The template validates your inputs (transfer count, well conflicts, volumes) before the workflow reaches the approval queue. See `examples/workflow_definition_template.py` for the full implementation and parameter docs.
 
 ---
 

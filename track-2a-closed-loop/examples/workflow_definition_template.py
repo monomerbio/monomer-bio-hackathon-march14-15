@@ -78,12 +78,15 @@ IMPORTANT: WELL REUSE
 ---------------------
 This template does NOT check for well conflicts across iterations.
 Your agent is responsible for ensuring dest_wells don't overlap with
-wells used in previous iterations. Query existing OD600 observations
-to determine which wells are already occupied:
+wells used in previous iterations.
 
-    from monomer.datasets import fetch_used_wells
-    used = fetch_used_wells(client, plate_barcode)
-    # Only pass dest_wells that are not in `used`
+The simplest approach: track dest_wells yourself in a list and append
+each iteration. If you need to recover state after a restart, query
+OD600 observations — wells that already have readings are occupied:
+
+    from monomer.datasets import fetch_absorbance_results
+    raw = fetch_absorbance_results(client, plate_barcode, column_index=2)
+    # Any well in raw["endpoint"] has already been inoculated
 """
 
 from __future__ import annotations
