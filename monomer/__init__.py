@@ -6,9 +6,10 @@ from monomer.workflows import (
     register_workflow,
     instantiate_workflow,
     poll_workflow_completion,
-    write_workflow_definition,
 )
 from monomer.transfers import (
+    ROWS,
+    SUPPLEMENT_NAMES,
     generate_transfer_array,
     compute_tip_consumption,
     compute_novel_bio,
@@ -23,7 +24,8 @@ __all__ = [
     "register_workflow",
     "instantiate_workflow",
     "poll_workflow_completion",
-    "write_workflow_definition",
+    "ROWS",
+    "SUPPLEMENT_NAMES",
     "generate_transfer_array",
     "compute_tip_consumption",
     "compute_novel_bio",

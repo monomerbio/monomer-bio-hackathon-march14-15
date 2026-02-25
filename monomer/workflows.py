@@ -6,8 +6,6 @@ polling for completion — all via the MCP client.
 
 from __future__ import annotations
 
-import json
-import re
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -15,133 +13,75 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from monomer.mcp_client import McpClient
 
-from monomer.transfers import REAGENT_WELLS, compute_tip_consumption
-
 # Defaults
 DAEMON_POLL_INTERVAL = 30  # seconds between status checks
 WORKFLOW_TIMEOUT_MINUTES = 180  # max wait per workflow (3 hours)
 
 
-def write_workflow_definition(
-    template_path: Path,
-    output_dir: Path,
-    transfer_array: list,
-    column_index: int,
-    iteration: int,
-    seed_params: dict | None = None,
-) -> Path:
-    """Write an iteration-specific workflow definition file.
-
-    Copies the template and replaces iteration-specific constants using regex.
-    Returns the path to the written file.
-    """
-    template = template_path.read_text()
-
-    tip_counts = compute_tip_consumption(transfer_array)
-    # Reagent well counter: count supplement wells (exclude Novel_Bio D1)
-    supplement_wells_used = len(
-        set(t[0] for t in transfer_array) - {REAGENT_WELLS["Novel_Bio"]}
-    )
-
-    def replace_const(name: str, value):
-        nonlocal template
-        template = re.sub(
-            rf"^({re.escape(name)}\s*=\s*).*$",
-            rf"\g<1>{value}",
-            template,
-            flags=re.MULTILINE,
-        )
-
-    # Core parameters
-    replace_const("TRANSFER_ARRAY", json.dumps(json.dumps(transfer_array)))
-    replace_const("DEST_COLUMN_INDEX", str(column_index))
-
-    # Seed parameters (for combined routine template)
-    if seed_params:
-        replace_const("SEED_WELL", f'"{seed_params["seed_well"]}"')
-        replace_const("NEXT_SEED_WELL", f'"{seed_params["next_seed_well"]}"')
-        replace_const("NM_CELLS_VOLUME", str(seed_params["nm_cells_volume"]))
-
-    # Tip consumption — extras for combined routine
-    p50_extra = 1 if seed_params else 0
-    p200_extra = 1 if seed_params else 0
-    p1000_count = (
-        1 if seed_params and seed_params["nm_cells_volume"] > 0 else 0
-    )
-    reagent_extra = (
-        1 if seed_params and seed_params["nm_cells_volume"] > 0 else 0
-    )
-
-    replace_const("P50_TIPS_TO_CONSUME", str(tip_counts["p50"] + p50_extra))
-    replace_const("P200_TIPS_TO_CONSUME", str(tip_counts["p200"] + p200_extra))
-    replace_const(
-        "P1000_TIPS_TO_CONSUME",
-        str(tip_counts.get("p1000", 0) + p1000_count),
-    )
-    replace_const(
-        "REAGENT_WELLS_TO_CONSUME",
-        str(supplement_wells_used + reagent_extra),
-    )
-
-    # Write iteration-specific file
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / "workflow_definition.py"
-    output_path.write_text(template)
-
-    return output_path
-
-
 def register_workflow(
     client: McpClient,
     workflow_path: Path,
-    iteration: int,
-    name_prefix: str = "Gradient Descent Iteration",
+    name: str = "Hackathon GD Agent",
 ) -> int:
-    """Register a workflow definition via MCP (upload file + create DB record).
+    """Register a workflow definition via MCP. Call this ONCE per session.
 
-    Returns the workflow definition database ID.
+    Uploads the workflow definition file and creates a named database record.
+    Returns the workflow definition ID for use in instantiate_workflow().
+
+    :param client: Connected MCP client.
+    :param workflow_path: Path to the workflow_definition_template.py file.
+    :param name: Human-readable name shown in the Monomer UI approval queue.
+    :returns: Workflow definition database ID.
     """
-    file_name = f"gradient_descent_iteration_r{iteration}.py"
-    workflow_name = f"{name_prefix} {iteration}"
-
-    # Step 1: Upload the workflow definition file
+    file_name = workflow_path.name
     code_content = workflow_path.read_text()
+
+    # Upload the file to the workcell
     client.call_tool(
         "create_workflow_definition_file",
         {"file_name": file_name, "code_content": code_content},
     )
 
-    # Step 2: Register the workflow definition (creates DB record)
+    # Create the named DB record
     client.call_tool(
         "register_workflow_definition",
-        {"name": workflow_name, "file_name": file_name},
+        {"name": name, "file_name": file_name},
     )
 
-    # Step 3: Look up the definition ID
+    # Return the assigned ID
     definitions = client.call_tool("list_workflow_definitions", {})
     for d in definitions:
-        if d["name"] == workflow_name:
+        if d["name"] == name:
             return d["id"]
 
-    raise RuntimeError(f"Definition '{workflow_name}' not found after registration")
+    raise RuntimeError(f"Definition '{name}' not found after registration")
 
 
 def instantiate_workflow(
     client: McpClient,
     definition_id: int,
     plate_barcode: str,
+    extra_inputs: dict | None = None,
     reason: str = "",
 ) -> str:
     """Create a workflow instance via MCP. Returns the instance UUID.
 
-    With auto_approve_pending_instances=True on the workcell, the workflow
-    starts immediately.
+    :param client: Connected MCP client.
+    :param definition_id: ID returned by register_workflow().
+    :param plate_barcode: Barcode of the experiment plate (always required).
+    :param extra_inputs: Additional inputs declared in build_definition() —
+        e.g. transfer_array, dest_wells, monitoring_wells, seed_well.
+        These are merged with plate_barcode into the inputs dict.
+    :param reason: Plain-English reason shown to the operator in the
+        approval queue. Be descriptive — e.g. "Iteration 2, center=[...]".
+    :returns: Workflow instance UUID.
     """
+    inputs = {"plate_barcode": plate_barcode, **(extra_inputs or {})}
     result = client.call_tool(
         "instantiate_workflow",
         {
             "definition_id": definition_id,
-            "inputs": {"plate_barcode": plate_barcode},
+            "inputs": inputs,
             "reason": reason,
         },
     )
