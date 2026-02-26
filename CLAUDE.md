@@ -29,6 +29,10 @@ A2      = NM+Cells (pre-mixed Novel Media + cells, for next-round warm seed well
 A12–H12 = single-use seed aliquots, one row per iteration (pre-aliquoted at plate prep)
 ```
 
+> **Pre-loaded by Monomer team** — the reagent plate (including NM+Cells in A2 and seed aliquots in col 12) is prepared and loaded before the experiment starts. Your agent does not need to manage plate loading.
+
+> **Seed wells (col 1 of experiment plate)** — A1–H1 are used as warm seed wells, one per iteration. The workflow pre-warms each one by transferring NM+Cells from the reagent plate during the previous iteration. Iteration 1 uses A1 (pre-seeded by Monomer), and each subsequent iteration uses the next row.
+
 ---
 
 ## Platform Primitives

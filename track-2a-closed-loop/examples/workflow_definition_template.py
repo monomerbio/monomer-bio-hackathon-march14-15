@@ -1,5 +1,10 @@
 """Hackathon closed-loop workflow definition template — Track 2A.
 
+IMPORTANT: This file is uploaded to and executed on the workcell, not run locally.
+The imports below (src.platform, src.workflows) only resolve inside the workcell
+Docker environment — running this file directly on your laptop will fail with
+ImportError. Use register_workflow() to upload and validate it instead.
+
 HOW TO USE
 ----------
 1. Register this file ONCE at the start of your session:
@@ -312,6 +317,9 @@ def build_definition(
             "p1000_tips_to_consume": p1000_tips,
             "reuse_tips_for_same_source": True,
             "reagent_wells_to_consume": reagent_wells_consumed,
+            # dest_column_index is required by the routine signature but unused
+            # when seed_dest_wells is explicitly provided (as it is here).
+            "dest_column_index": 2,
         },
     )
     workflow.add_routine("liquid_handling", liquid_handling)

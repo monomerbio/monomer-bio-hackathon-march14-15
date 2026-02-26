@@ -101,9 +101,11 @@ center = apply_constraints(center)  # ensure volumes are valid
 transfers = generate_transfer_array(center, column_index=2, delta=10)
 ```
 
-### Step 3: Validate, Register, and Run Each Iteration
+### Step 3: Register Template and Run Each Iteration
 
-The workflow definition is registered **once** at session start. Before registering, validate it to catch routine name typos and missing parameters early — validation runs on the workcell and is fast.
+The workflow definition is registered **once** at session start. Each iteration you instantiate it with fresh inputs — no file regeneration needed.
+
+Before registering, you can call the `validate_workflow_definition_file` MCP tool to catch routine name typos and missing parameters early — check the MCP resource `guide://workflows/creation` for the exact parameter names.
 
 See `examples/basic_agent.py` for a complete working example.
 
@@ -112,13 +114,6 @@ import json
 from monomer.workflows import register_workflow, instantiate_workflow, poll_workflow_completion
 from monomer.transfers import ROWS
 from pathlib import Path
-
-# ── Validate ONCE before registering ────────────────────────────────────────
-# Catches routine name typos and missing parameters before reaching the queue.
-result = client.call_tool("validate_workflow_definition_file", {
-    "file_path": "examples/workflow_definition_template.py"
-})
-print(result)  # should say "valid"
 
 # ── Register ONCE at session start ──────────────────────────────────────────
 def_id = register_workflow(

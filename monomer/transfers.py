@@ -161,7 +161,8 @@ def generate_transfer_array(
                         [reagent_wells[name], f"{row}{col}", perturbed[name]]
                     )
 
-    # Sort: Novel_Bio first, then MgSO4, NaCl, Glucose
+    # Sort: Novel_Bio first (largest volume, tip reuse), then supplements smallest-to-last.
+    # This groups all Novel_Bio transfers together so only one tip change is needed.
     source_order = [
         reagent_wells["Novel_Bio"],
         reagent_wells["MgSO4"],
