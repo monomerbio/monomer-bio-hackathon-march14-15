@@ -1,46 +1,31 @@
 # Monomer Bio Hackathon — AI Agent Context
 
-This file gives AI coding assistants (Claude Code, Cursor, etc.) all the context needed to help a hackathon contestant build an autonomous biology agent.
-
-## What This Is
-
-A 2-day hackathon (March 14–15, 2026) where teams build AI-driven experiments on a real robotic workcell. The goal: find the optimal growth media for *Vibrio natriegens* by running automated experiments, reading absorbance, and iterating.
-
-**Scoring:** total biomass = Σ (number of growing wells × OD600 absorbance per well). Higher is better.
+This file gives AI coding assistants (Claude Code, Cursor, etc.) the technical context needed to help a contestant build a Track 2A closed-loop agent on the Monomer workcell.
 
 ---
 
-## The Biology
+## Media Composition
 
-### Cell Line: *Vibrio natriegens*
-- Fastest naturally occurring BSL-1 organism — ~20 min doubling time, ~50 min to confluence
-- Grown in 96-well plates, 180 µL per well
-- OD600 absorbance is the readout (platereader every 10 minutes)
-- A typical growth curve goes from ~0.05 (seeded) to 0.5–1.5+ (confluent) in 60–90 min
-
-### Growth Media
-Each well contains a total of **180 µL** composed of:
+Each experimental well is **180 µL** total:
 
 | Component | Role | Range |
 |-----------|------|-------|
-| Novel Bio (base media) | Carbon/nitrogen source, required | 90–180 µL (min 90 µL) |
+| Novel Bio (base media) | Required base | 90–180 µL (min 90 µL) |
 | Glucose | Carbon supplement | 0–90 µL |
 | NaCl | Osmolarity | 0–90 µL |
 | MgSO4 | Cofactor supplement | 0–90 µL |
 
-Constraints:
-- Novel Bio must be ≥ 90 µL (floor to maintain viability)
 - All volumes are integers (µL resolution)
-- Sum of all components = exactly 180 µL
-- Supplements drawn from a reagent plate loaded onto the workcell (default: GD Compound Stock Plate)
+- Sum must equal exactly 180 µL
+- `apply_constraints()` in `monomer/transfers.py` enforces these rules
 
 ### Reagent Well Map (reagent plate)
 ```
-A1  = Glucose stock
-B1  = NaCl stock
-C1  = MgSO4 stock
-D1  = Novel Bio (base media)
-A2  = NM+Cells (pre-mixed Novel Media + cells, for next-round warm seed well)
+A1      = Glucose stock
+B1      = NaCl stock
+C1      = MgSO4 stock
+D1      = Novel Bio (base media) — 1 tip reused across all transfers from this well
+A2      = NM+Cells (pre-mixed Novel Media + cells, for next-round warm seed well)
 A12–H12 = single-use seed aliquots, one row per iteration (pre-aliquoted at plate prep)
 ```
 
@@ -63,9 +48,7 @@ CulturePlate        →  tracked plate with barcode, history of readings
 | **GD Iteration Combined** | Reagent transfers + seed cells from warm well + pre-warm next seed well | `experiment_plate_barcode`, `reagent_type`, `transfer_array`, `seed_well`, `seed_dest_wells` |
 | **Measure Absorbance** | Read OD600 from a set of wells | `culture_plate_barcode`, `method_name` (`96wp_od600`), `wells_to_process` |
 
-Contestants do not call these directly — they are wired up inside `workflow_definition_template.py`. The template handles all parameter mapping, tip computation, and scheduling constraints.
-
-A workflow is a sequence of routine references, defined as a Python file registered once per session and instantiated per iteration via MCP.
+Don't call these directly — they're wired up inside `workflow_definition_template.py`, which handles parameter mapping, tip computation, and scheduling constraints.
 
 ### Plate Barcode Convention
 ```
@@ -86,58 +69,58 @@ e.g. GD-R1-20260314
 
 **Workflow Definitions**
 ```
-list_workflow_definitions       # All registered workflow definitions
-get_workflow_definition         # Detailed info about a specific definition
-get_workflow_definition_schedule# Scheduled nodes with relative execution times
-get_workflow_definition_dag     # DAG structure showing nodes and dependencies
-list_workflow_definition_files  # Workflow definition files on disk
-get_workflow_dsl_schemas        # Simplified schemas for DSL classes
-create_workflow_definition_file # Upload a workflow .py file to workcell
+list_workflow_definitions         # All registered workflow definitions
+get_workflow_definition           # Detailed info about a specific definition
+get_workflow_definition_schedule  # Scheduled nodes with relative execution times
+get_workflow_definition_dag       # DAG structure showing nodes and dependencies
+list_workflow_definition_files    # Workflow definition files on disk
+get_workflow_dsl_schemas          # Simplified schemas for DSL classes
+create_workflow_definition_file   # Upload a workflow .py file to workcell
 validate_workflow_definition_file # Validate definition before registration ← use this
-register_workflow_definition    # Register validated file as a named definition
+register_workflow_definition      # Register validated file as a named definition
 ```
 
 **Workflow Instances**
 ```
-list_workflow_instances         # All instances and their statuses
-get_workflow_instance_details   # Poll instance status
-list_workflow_routines          # Scheduled steps for a specific instance
-list_pending_workflows          # Workflows awaiting operator approval
-instantiate_workflow            # Launch a workflow (returns instance UUID)
-check_workflow_cancellable      # Check if workflow can be safely cancelled
-cancel_workflow_instance        # Cancel a running or pending instance
+list_workflow_instances           # All instances and their statuses
+get_workflow_instance_details     # Poll instance status
+list_workflow_routines            # Scheduled steps for a specific instance
+list_pending_workflows            # Workflows awaiting operator approval
+instantiate_workflow              # Launch a workflow (returns instance UUID)
+check_workflow_cancellable        # Check if workflow can be safely cancelled
+cancel_workflow_instance          # Cancel a running or pending instance
 ```
 
 **Routines**
 ```
-list_available_routines         # All available routines and their signatures
-get_routine_details             # Detailed signature for one routine
-list_future_routines            # Upcoming scheduled routines
-get_future_routine_details      # Complete future routine details
-get_workflow_routine_with_children # WorkflowRoutine with child FutureRoutines
-trace_future_routine_to_workflow# Trace a FutureRoutine back to its workflow
-check_consumables_for_timeframe # Consumables needed for upcoming routines
+list_available_routines           # All available routines and their signatures
+get_routine_details               # Detailed signature for one routine
+list_future_routines              # Upcoming scheduled routines
+get_future_routine_details        # Complete future routine details
+get_workflow_routine_with_children# WorkflowRoutine with child FutureRoutines
+trace_future_routine_to_workflow  # Trace a FutureRoutine back to its workflow
+check_consumables_for_timeframe   # Consumables needed for upcoming routines
 ```
 
 **Plates**
 ```
-list_culture_plates             # All culture plates on the workcell
-check_plate_availability        # Check if a plate barcode is available
-unlink_culture_plate_from_workflow # Unlink a plate from its current workflow
-list_reagent_plates             # Reagent plates and their media/well state
+list_culture_plates               # All culture plates on the workcell
+check_plate_availability          # Check if a plate barcode is available
+unlink_culture_plate_from_workflow# Unlink a plate from its current workflow
+list_reagent_plates               # Reagent plates and their media/well state
 ```
 
 #### MCP Resources
-The workcell also exposes documentation resources — your AI coding tool can read these directly to understand the workflow DSL without guessing:
+Read these directly to understand the workflow DSL without guessing:
 ```
-guide://workflows/dsl           # Complete DSL reference with examples ← start here
-guide://workflows/creation      # Quick start guide for creating workflows
-guide://workflows/concepts      # Workflow concepts and execution flow
+guide://workflows/dsl             # Complete DSL reference with examples ← start here
+guide://workflows/creation        # Quick start guide for creating workflows
+guide://workflows/concepts        # Workflow concepts and execution flow
 example://workflows/ipsc-maintenance # Complete working example workflow file
-schema://workflows/dsl-api      # Auto-generated API reference for DSL classes
-schema://workflows/models       # Database schema models
-guide://future-routines/monitoring # Monitoring guide for AI agents
-schema://routines/parameters    # Routine parameter types reference
+schema://workflows/dsl-api        # Auto-generated API reference for DSL classes
+schema://workflows/models         # Database schema models
+guide://future-routines/monitoring# Monitoring guide for AI agents
+schema://routines/parameters      # Routine parameter types reference
 guide://cultures-and-plates/concepts # Domain concepts explanation
 doc://cultures-and-plates/api-usage  # API usage guide with examples
 ```
@@ -149,13 +132,13 @@ doc://cultures-and-plates/api-usage  # API usage guide with examples
 
 #### Available Tools
 ```
-list_cultures                   # All culture plates being tracked
-get_culture_details             # Plate metadata + latest readings
-list_culture_statuses           # Status summary of all cultures
-update_culture_status           # Update status for one or more wells
-list_plates                     # All plates with observation summaries
-get_plate_observations          # Time-series OD600 readings for a plate
-export_plate_observations       # Export observations as structured data
+list_cultures                     # All culture plates being tracked
+get_culture_details               # Plate metadata + latest readings
+list_culture_statuses             # Status summary of all cultures
+update_culture_status             # Update status for one or more wells
+list_plates                       # All plates with observation summaries
+get_plate_observations            # Time-series OD600 readings for a plate
+export_plate_observations         # Export observations as structured data
 ```
 
 ### Install in Cursor
@@ -184,15 +167,13 @@ export_plate_observations       # Export observations as structured data
 from monomer.mcp_client import McpClient
 
 client = McpClient("http://192.168.68.55:8080")
-client.connect()  # optional — auto-connects on first call
 
-# Explore what's on the workcell
 plates = client.call_tool("list_culture_plates", {})
 routines = client.call_tool("list_available_routines", {})
 definitions = client.call_tool("list_workflow_definitions", {})
 ```
 
-For registering and running workflows, use the higher-level `monomer/workflows.py` helpers — they handle file upload, ID lookup, input merging, and polling.
+Use the higher-level helpers in `workflows.py` for registering and running workflows — they handle file upload, ID lookup, input merging, and polling.
 
 ### `workflows.py` — register, launch, poll
 ```python
@@ -242,11 +223,10 @@ center = apply_constraints(center)  # clamp to valid ranges
 transfers = generate_transfer_array(center, column_index=2, delta=10)
 # transfers = [["D1", "A2", 180], ["D1", "B2", 145], ["A1", "B2", 20], ...]
 
-# Seed/column helpers
 iteration = 1
-column_index  = iteration + 1                                        # 2
-dest_wells    = [f"{r}{column_index}" for r in ROWS]                 # ["A2".."H2"]
-seed_well     = f"{ROWS[iteration - 1]}1"                            # "A1"
+column_index   = iteration + 1
+dest_wells     = [f"{r}{column_index}" for r in ROWS]                    # ["A2".."H2"]
+seed_well      = f"{ROWS[iteration - 1]}1"                               # "A1"
 next_seed_well = f"{ROWS[iteration]}1" if iteration < len(ROWS) else ""  # "B1"
 ```
 
@@ -265,37 +245,13 @@ next_seed_well = f"{ROWS[iteration]}1" if iteration < len(ROWS) else ""  # "B1"
 | P200 range | 51–200 µL |
 | P1000 range | 201–1000 µL |
 
-Workflows require manual approval from a Monomer team member before execution. Keep workflows under 30 minutes per iteration.
-
----
-
-## Track 1: Research Goal
-
-Use Elnora AI (or any AI) to answer these questions before designing your experiment:
-1. Which of Glucose, NaCl, MgSO4 most significantly affects *V. natriegens* growth?
-2. What concentration ranges are biologically meaningful?
-3. Is a DOE (design of experiments) the right approach, or iterative gradient descent?
-4. What passaging strategy maximizes total biomass over 24 hours?
-5. What pipetting or timing factors could confound results?
-
-Output: a specific experimental plan (which concentrations, how many wells, what workflow sequence).
-
-## Track 2A: Closed Loop Agent Goal
-
-Build an agent that:
-1. Reads current OD600 results from the workcell
-2. Decides what media composition to test next (gradient descent, Bayesian optimization, etc.)
-3. Generates a transfer array and instantiates the workflow with those inputs via MCP
-4. Waits for operator approval and workflow completion
-5. Loops back to step 1
-
-The `monomer/` library handles steps 3–4. Register `workflow_definition_template.py` once; your agent generates `transfer_array` and other inputs each iteration and passes them to `instantiate_workflow(extra_inputs={...})`.
+Workflows go to `pending_approval` after instantiation and require a Monomer team member to approve before execution. Keep iterations under 30 minutes of liquid handling.
 
 ---
 
 ## Useful REST Endpoints
 
-The workcell also exposes a REST API (in addition to MCP):
+The workcell also exposes a REST API alongside MCP:
 
 ```
 GET  /api/datasets/?verbose=1&ordering=-createdAt   # All datasets (OD600 readings)
@@ -304,4 +260,4 @@ GET  /api/culture-plates/                            # All plates
 
 Headers required: `X-Monomer-Client: desktop-frontend`
 
-See `monomer/datasets.py` for a working example of REST + MCP together.
+See `monomer/datasets.py` for a working example.
