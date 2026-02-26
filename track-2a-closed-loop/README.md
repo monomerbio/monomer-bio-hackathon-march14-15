@@ -44,7 +44,7 @@ Get your token from `cloud-staging.monomerbio.com` → Profile → API Token.
 
 ### Option C: Any MCP-compatible tool
 
-The workcell speaks standard MCP (JSON-RPC 2.0 over HTTP POST). See `CLAUDE.md` for the full protocol spec.
+The workcell speaks standard MCP (JSON-RPC 2.0 over HTTP POST). See `CLAUDE.md` for the full tool list and MCP Resources (DSL guides, schema references, and a working example workflow your AI can read directly).
 
 ---
 
@@ -101,9 +101,9 @@ center = apply_constraints(center)  # ensure volumes are valid
 transfers = generate_transfer_array(center, column_index=2, delta=10)
 ```
 
-### Step 3: Register Template and Run Each Iteration
+### Step 3: Validate, Register, and Run Each Iteration
 
-The workflow definition is registered **once** at session start. Each iteration you instantiate it with fresh inputs — no file regeneration needed.
+The workflow definition is registered **once** at session start. Before registering, validate it to catch routine name typos and missing parameters early — validation runs on the workcell and is fast.
 
 See `examples/basic_agent.py` for a complete working example.
 
@@ -112,6 +112,13 @@ import json
 from monomer.workflows import register_workflow, instantiate_workflow, poll_workflow_completion
 from monomer.transfers import ROWS
 from pathlib import Path
+
+# ── Validate ONCE before registering ────────────────────────────────────────
+# Catches routine name typos and missing parameters before reaching the queue.
+result = client.call_tool("validate_workflow_definition_file", {
+    "file_path": "examples/workflow_definition_template.py"
+})
+print(result)  # should say "valid"
 
 # ── Register ONCE at session start ──────────────────────────────────────────
 def_id = register_workflow(

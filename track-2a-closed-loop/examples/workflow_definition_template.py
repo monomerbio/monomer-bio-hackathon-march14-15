@@ -65,14 +65,14 @@ PLATE LAYOUT CONVENTIONS (default GD stock plate)
     C1 = MgSO4 stock
     D1 = Novel Bio (base media) — largest volume, 1 tip reused across all transfers
     A2 = NM+Cells (pre-mixed Novel Media + seeded cells, for next-round warmup)
+    A12–H12 = single-use seed aliquots, one per iteration (pre-aliquoted at plate prep)
 
   Experiment plate columns:
-    Col 1  = seed wells (A1–H1), one per iteration
+    Col 1  = seed wells (A1–H1), one warm seed well per iteration
     Col 2  = iteration 1 results
     Col 3  = iteration 2 results
     ...
     Col 11 = iteration 10 results
-    Col 12 = negative control (media only, no cells)
 
 IMPORTANT: WELL REUSE
 ---------------------

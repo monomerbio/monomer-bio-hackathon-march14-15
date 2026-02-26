@@ -36,10 +36,12 @@ Constraints:
 
 ### Reagent Well Map (reagent plate)
 ```
-A1 = Glucose stock
-B1 = NaCl stock
-C1 = MgSO4 stock
-D1 = Novel Bio (base media)
+A1  = Glucose stock
+B1  = NaCl stock
+C1  = MgSO4 stock
+D1  = Novel Bio (base media)
+A2  = NM+Cells (pre-mixed Novel Media + cells, for next-round warm seed well)
+A12–H12 = single-use seed aliquots, one row per iteration (pre-aliquoted at plate prep)
 ```
 
 ---
@@ -81,19 +83,63 @@ e.g. GD-R1-20260314
 - **Transport:** JSON-RPC 2.0 over HTTP POST with SSE response
 
 #### Available Tools
+
+**Workflow Definitions**
 ```
-list_available_routines         # See all routines and their signatures
-get_routine_details             # Detailed signature for one routine
 list_workflow_definitions       # All registered workflow definitions
+get_workflow_definition         # Detailed info about a specific definition
+get_workflow_definition_schedule# Scheduled nodes with relative execution times
+get_workflow_definition_dag     # DAG structure showing nodes and dependencies
+list_workflow_definition_files  # Workflow definition files on disk
+get_workflow_dsl_schemas        # Simplified schemas for DSL classes
 create_workflow_definition_file # Upload a workflow .py file to workcell
-register_workflow_definition    # Register uploaded file as a named definition
+validate_workflow_definition_file # Validate definition before registration ← use this
+register_workflow_definition    # Register validated file as a named definition
+```
+
+**Workflow Instances**
+```
 list_workflow_instances         # All instances and their statuses
-instantiate_workflow            # Launch a workflow (returns instance UUID)
 get_workflow_instance_details   # Poll instance status
+list_workflow_routines          # Scheduled steps for a specific instance
+list_pending_workflows          # Workflows awaiting operator approval
+instantiate_workflow            # Launch a workflow (returns instance UUID)
+check_workflow_cancellable      # Check if workflow can be safely cancelled
 cancel_workflow_instance        # Cancel a running or pending instance
-list_culture_plates             # List all plates on the workcell
-check_plate_availability        # Check if a plate barcode is available
+```
+
+**Routines**
+```
+list_available_routines         # All available routines and their signatures
+get_routine_details             # Detailed signature for one routine
 list_future_routines            # Upcoming scheduled routines
+get_future_routine_details      # Complete future routine details
+get_workflow_routine_with_children # WorkflowRoutine with child FutureRoutines
+trace_future_routine_to_workflow# Trace a FutureRoutine back to its workflow
+check_consumables_for_timeframe # Consumables needed for upcoming routines
+```
+
+**Plates**
+```
+list_culture_plates             # All culture plates on the workcell
+check_plate_availability        # Check if a plate barcode is available
+unlink_culture_plate_from_workflow # Unlink a plate from its current workflow
+list_reagent_plates             # Reagent plates and their media/well state
+```
+
+#### MCP Resources
+The workcell also exposes documentation resources — your AI coding tool can read these directly to understand the workflow DSL without guessing:
+```
+guide://workflows/dsl           # Complete DSL reference with examples ← start here
+guide://workflows/creation      # Quick start guide for creating workflows
+guide://workflows/concepts      # Workflow concepts and execution flow
+example://workflows/ipsc-maintenance # Complete working example workflow file
+schema://workflows/dsl-api      # Auto-generated API reference for DSL classes
+schema://workflows/models       # Database schema models
+guide://future-routines/monitoring # Monitoring guide for AI agents
+schema://routines/parameters    # Routine parameter types reference
+guide://cultures-and-plates/concepts # Domain concepts explanation
+doc://cultures-and-plates/api-usage  # API usage guide with examples
 ```
 
 ### Monitor MCP (Cloud — read-only observation)
@@ -106,7 +152,10 @@ list_future_routines            # Upcoming scheduled routines
 list_cultures                   # All culture plates being tracked
 get_culture_details             # Plate metadata + latest readings
 list_culture_statuses           # Status summary of all cultures
+update_culture_status           # Update status for one or more wells
+list_plates                     # All plates with observation summaries
 get_plate_observations          # Time-series OD600 readings for a plate
+export_plate_observations       # Export observations as structured data
 ```
 
 ### Install in Cursor

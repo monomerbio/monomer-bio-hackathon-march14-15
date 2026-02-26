@@ -92,14 +92,12 @@ A well "has growth" if OD600 > baseline (pre-seeding read). The team with the hi
 
 | Instrument | Role |
 |-----------|------|
-| Opentrons Flex | Liquid handling (P50, P200, P1000 single-channel) |
-| Opentrons OT-2 | Additional liquid handling |
-| Tecan Infinite + 2x Byonoy | Plate readers (OD600 every 10 min) |
+| Opentrons Flex | Liquid handling (P1000 single-channel, P1000 8-Channel, Gripper) |
+| Tecan Infinite | Plate reader |
 | Liconic STX-220 (37°C) | Incubation |
 | Liconic STX-110 (4°C) | Reagent storage |
+| Liconic LPX-220 | Room Temperature Storage |
 | PAA KX-2 | Robotic arm (plate transport) |
-| Agilent VSpin | Centrifuge |
-| Cephla Squid | Microscope (4X, Track 2B) |
 
 ---
 
