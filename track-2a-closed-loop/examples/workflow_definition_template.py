@@ -59,8 +59,10 @@ WHAT YOUR AGENT MUST PRODUCE EACH ITERATION
                     Set to "" on the last iteration to skip warmup.
 
   reagent_type      Tag identifying your stock plate in the Monomer system.
+                    This MUST match one of the accepted values in the workcell
+                    routine — coordinate with the Monomer team when you load
+                    your custom plate so they register it with the right tag.
                     Default: "GD Compound Stock Plate"
-                    Custom plates: use whatever tag you registered your plate with.
 
 PLATE LAYOUT CONVENTIONS (default GD stock plate)
 --------------------------------------------------
@@ -113,7 +115,7 @@ _SEED_TRANSFER_UL = 20      # µL of seed culture added to each experimental wel
 _SEED_MIX_VOL_UL = 100     # µL used to resuspend seed well before seeding
 _SEED_MIX_REPS = 5         # pipette mix repetitions on seed well
 _NM_CELLS_VOL_UL = 220     # µL of NM+Cells transferred to pre-warm next seed well
-_MAX_TRANSFERS = 30         # hard cap on reagent transfer steps per iteration
+_MAX_TRANSFERS = 40         # hard cap on reagent transfer steps per iteration
 
 
 # ── Internal helpers ─────────────────────────────────────────────────────────

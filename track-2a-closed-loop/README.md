@@ -5,15 +5,39 @@
 
 ---
 
-## What You're Building
+## The Flow
 
-A Python agent that:
-1. **Observes** — reads OD600 growth data from the workcell via MCP
-2. **Decides** — uses an optimization algorithm to choose the next media composition
-3. **Acts** — generates a transfer array and instantiates the workflow with those inputs
-4. **Loops** — waits for operator approval + workflow completion, then repeats
+### Step 0: Research (Track 1 → Track 2A handoff)
 
-This is real biology running on a real robot. Each iteration takes 60–90 minutes.
+Use Elnora to research *V. natriegens* growth and identify which media components to test and at what concentrations. The [available components are listed in Notion](https://www.notion.so/2ff8d59ea9ff81ca8db1fd1ff80233d0) — you can choose from ~13 options including Glucose, Sodium Chloride, Magnesium Sulfate, Potassium Phosphate (mono/dibasic), Potassium Chloride, Calcium Chloride, Ammonium Sulfate, MOPS, Glycerol, Tryptone, Yeast Extract, and Trace metals solution.
+
+Come out of Track 1 with: which components, which wells they go in, and what stock concentrations you want.
+
+### Step 1: Design your stock plate
+
+You'll get a **24-well deep well plate** to use as your stock plate. Assign one component per well (e.g. A1 = Glucose 1M, B1 = KCl 2M, C1 = MOPS 500mM). The robot will pipette directly from these wells into your experiment plate, so stock concentration determines your working concentration range.
+
+**Transfer limit: max 40 transfers per iteration.** With 8 experimental wells and 4 components, that's 32 transfers — leaving room for a control well of pure base media. Plan your well layout and dilutions before you start.
+
+Submit your plate layout to a Monomer team member. We'll prepare the stock solutions and load the plate onto the workcell, registering it with a tag you'll use in your workflow.
+
+### Step 2: Run the closed loop
+
+Your agent:
+1. **Decides** — picks a media composition to test next (gradient descent, Bayesian optimization, etc.)
+2. **Acts** — generates a transfer array and instantiates the workflow
+3. **Waits** — the first few iterations require Monomer team approval (~a few minutes); later iterations may be pre-approved
+4. **Observes** — reads OD600 growth data; platereader runs every 5–10 minutes during the ~90 min monitoring window
+5. **Loops** — each iteration is ~2 hours end-to-end; you get ~6–8 iterations over the hackathon
+
+### A note on cold reagents
+
+Your stock plate lives in the 4°C fridge between uses. Cold reagents straight from the fridge will cause a **30–60 min lag before exponential growth** — longer than with pre-warmed reagents. Two approaches:
+
+- **Prepare in parallel:** While your current iteration is running (90 min monitoring window), pull the stock plate out and let it warm to room temp before the next iteration starts.
+- **Room temp storage:** If you're doing back-to-back iterations, it may be practical to keep the stock plate at room temp for the day — just flag this with a Monomer team member.
+
+Either way, account for the warm-up effect in your growth model. Consistent plate temperature across iterations matters more than the absolute temperature.
 
 ---
 
@@ -204,12 +228,16 @@ The template validates your inputs (transfer count, well conflicts, volumes) bef
 
 ## Workcell Constraints
 
-- **Workflow approval:** Every workflow goes to `pending_approval` after instantiation. A Monomer team member will approve it from the workcell UI — typically within a few minutes during the hackathon. `poll_workflow_completion()` handles the wait automatically; your agent just blocks until it hears back. If nothing happens after 10 minutes, flag the Monomer team member on site.
+- **Workflow approval:** Every workflow goes to `pending_approval` after instantiation. The first few iterations require manual approval from a Monomer team member (~a few minutes). `poll_workflow_completion()` blocks automatically; your agent just waits. If nothing happens after 10 minutes, flag a Monomer team member.
 
-- **One workflow at a time:** The workcell runs workflows sequentially. Don't queue more than one ahead — wait for the current one to complete before instantiating the next.
+- **One workflow at a time:** The workcell runs workflows sequentially. Wait for the current one to complete before instantiating the next.
 
 - **Tip and reagent tracking:** Handled internally by the workflow template. You don't need to count tips or reagent wells — the template computes consumption from your transfer array.
 
-- **Workcell sharing:** Other teams may be using the workcell. If your workflow is queued but not starting, check with the Monomer team — there may be a preceding workflow to wait for.
+- **Workcell sharing:** Other teams may be using the workcell. If your workflow is queued but not starting, check with the Monomer team.
 
-- **Volume limits:** Enforce these in your transfer array. P50 handles 1–50 µL, P200 handles 51–200 µL. `apply_constraints()` keeps supplement volumes within the valid range.
+- **Volume limits:** P50 handles 1–50 µL, P200 handles 51–200 µL, P1000 handles 201–1000 µL. `apply_constraints()` enforces these in your transfer array.
+
+- **Monitoring frequency:** Minimum 5 minutes between platereader reads. Default in the template is 10 minutes (`monitoring_interval_minutes=10`), which gives a 90-minute window with 9 reads. You can go down to 5 minutes for more granular data.
+
+- **Reagent plate tag:** Your custom stock plate must be registered on the workcell with a specific `reagent_type` tag before you can use it. Coordinate with the Monomer team when you hand off your plate layout — they'll give you the tag string to use in your workflow.

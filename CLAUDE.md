@@ -49,10 +49,13 @@ CulturePlate        →  tracked plate with barcode, history of readings
 
 | Routine Name | Purpose | Key Parameters |
 |---|---|---|
-| **GD Iteration Combined** | Reagent transfers + seed cells from warm well + pre-warm next seed well | `experiment_plate_barcode`, `reagent_type`, `transfer_array`, `seed_well`, `seed_dest_wells` |
+| **GD Iteration Combined** | Reagent transfers from stock plate → experiment wells, seed from warm well on experiment plate, pre-warm next seed well | `experiment_plate_barcode`, `reagent_type`, `transfer_array`, `seed_well`, `seed_dest_wells` |
+| **AI Scientist Compound Plate Generation** | Build a compound plate: transfer from 24-well deep well stock → 96-well flat plate | `compound_plate_barcode`, `reagent_type`, `transfer_array` |
 | **Measure Absorbance** | Read OD600 from a set of wells | `culture_plate_barcode`, `method_name` (`96wp_od600`), `wells_to_process` |
 
-Don't call these directly — they're wired up inside `workflow_definition_template.py`, which handles parameter mapping, tip computation, and scheduling constraints.
+> **`reagent_type` is a restricted field** in GD Iteration Combined — it must match a value registered on the workcell. Coordinate with the Monomer team when loading your custom stock plate to get the correct tag string.
+
+The iteration routines are wired up inside `workflow_definition_template.py`, which handles tip computation and scheduling. Don't call them directly.
 
 ### Plate Barcode Convention
 ```
@@ -241,15 +244,17 @@ next_seed_well = f"{ROWS[iteration]}1" if iteration < len(ROWS) else ""  # "B1"
 | Constraint | Value |
 |-----------|-------|
 | Max concurrent workflows | 1 (sequential scheduling) |
-| Platereader frequency | Every 10 minutes |
+| Max transfers per iteration | 40 (`_MAX_TRANSFERS` in template) |
+| Platereader minimum interval | 5 minutes (default in template: 10 min) |
 | Well volume | 180 µL |
 | Incubation temperature | 37°C |
-| Tip reuse policy | Novel Bio (D1) reuses 1 tip; all other reagents use fresh tips |
+| Tip reuse policy | Base media well (D1) reuses 1 tip; all other source wells use fresh tips |
 | P50 range | 1–50 µL |
 | P200 range | 51–200 µL |
 | P1000 range | 201–1000 µL |
+| Reagent plate storage | 4°C (Liconic STX-110) — pull 30 min before use to reduce cold-lag |
 
-Workflows go to `pending_approval` after instantiation and require a Monomer team member to approve before execution. Keep iterations under 30 minutes of liquid handling.
+Workflows go to `pending_approval` after instantiation. The first few iterations require manual Monomer team approval; later iterations may be pre-approved.
 
 ---
 
