@@ -1,61 +1,29 @@
-# Monomer Bio AI Scientist Hackathon — March 14–15, 2026
+# Monomer Bio Hackathon — Software Setup
 
-**Venue:** 1338 Mission St, San Francisco
-**Theme:** Build scientific agents to run closed-loop automation on real biology
-**Cell line:** *Vibrio natriegens* (fastest-growing BSL-1 organism, ~20 min doubling time)
-**Scoring:** Maximize total biomass = **Σ (wells × OD600 absorbance)**
+This repo is the software companion for Track 2 of the March 14–15 AI Scientist Hackathon. For logistics, format, scoring, and the full track overview, see the [Notion setup page](https://www.notion.so/Q1-2026-AI-Scientist-Hackathon-Setup-2ff8d59ea9ff81d5acbbeb45f38a743b).
 
 ---
-
-## What You're Building
-
-You'll design experiments to find the optimal growth media for *V. natriegens*, then automate those experiments on a real robotic workcell. The workcell reads OD600 absorbance every 10 minutes — your AI agent can observe results and decide what to run next, closing the loop in real time.
 
 ## Tracks
 
-| Track | Focus | Lead |
-|-------|-------|------|
-| [Track 1: Research](./track-1-research/) | Use Elnora AI to research protocols and design your experiment | Carmen Kivisild (Elnora) |
-| [Track 2A: Closed Loop](./track-2a-closed-loop/) | Build an autonomous agent using Monomer MCP to iterate media optimization | Carter Allen (Monomer) |
-| [Track 2B: Protocol Dev](./track-2b-protocol-dev/) | Use AI coding tools to write protocols for Hamilton STARlet + Cephla microscope | Rick Wierenga (Retro Bio) |
-| [Track 2C: Physical AI](./track-2c-physical-ai/) | Program a UR10e arm to automate flask-based cell culture | TBD |
-
-**Track 1 is mandatory** — all participants start here to design their experiment, then continue in a Track 2.
+| Track | Directory | Status |
+|-------|-----------|--------|
+| Track 1: Research (Elnora) | — | See Notion for Elnora setup |
+| Track 2A: Closed Loop (Monomer MCP) | [`track-2a-closed-loop/`](./track-2a-closed-loop/) | Ready — start here |
+| Track 2B: Protocol Dev (Hamilton + Cephla) | [`track-2b-protocol-dev/`](./track-2b-protocol-dev/) | Setup TBD |
+| Track 2C: Physical AI (UR10e) | [`track-2c-physical-ai/`](./track-2c-physical-ai/) | Setup TBD |
 
 ---
 
-## Quick Start
+## Track 2A: Monomer MCP Setup
 
-### 1. Connect to the Platform
-
-The staging environment is at `cloud-staging.monomerbio.com`. Get credentials from a Monomer team member.
-
-For AI tools (Cursor, Claude Code, etc.): see [Track 2A Setup](./track-2a-closed-loop/README.md#mcp-setup) to install the MCP server.
-
-### 2. Install This Library
+Install the Python client library:
 
 ```bash
 pip install -e .
 ```
 
-### 3. Set Your Workcell Connection
-
-```bash
-export WORKCELL_HOST=192.168.68.55
-export WORKCELL_PORT=8080
-```
-
-Or use the defaults if on the local network.
-
-### 4. Try a Quick Check
-
-```python
-from monomer.mcp_client import McpClient
-
-client = McpClient()
-plates = client.call_tool("list_culture_plates", {})
-print(plates)
-```
+Then follow the [Track 2A README](./track-2a-closed-loop/README.md) for MCP connection, workflow registration, and agent examples.
 
 ---
 
@@ -68,41 +36,8 @@ monomer/                  # Python client library
   datasets.py             # Fetch OD600 absorbance results
   transfers.py            # Transfer array generation (media composition)
 
-track-1-research/         # Biology context, research questions, Elnora guide
+track-1-research/         # Placeholder — see Notion for Elnora setup
 track-2a-closed-loop/     # Monomer MCP agent examples and workflow reference
-track-2b-protocol-dev/    # Hamilton STARlet + Cephla microscope protocols
-track-2c-physical-ai/     # UR10e robotic arm automation
+track-2b-protocol-dev/    # Placeholder — Hamilton STARlet + Cephla setup TBD
+track-2c-physical-ai/     # Placeholder — UR10e arm setup TBD
 ```
-
----
-
-## Scoring
-
-Growth is measured as OD600 absorbance in each well of a 96-well plate. Final score:
-
-```
-score = number_of_wells_with_growth × mean_OD600_across_those_wells
-```
-
-A well "has growth" if OD600 > baseline (pre-seeding read). The team with the highest score wins.
-
----
-
-## Hardware on the Workcell
-
-| Instrument | Role |
-|-----------|------|
-| Opentrons Flex | Liquid handling (P1000 single-channel, P1000 8-Channel, Gripper) |
-| Tecan Infinite | Plate reader |
-| Liconic STX-220 (37°C) | Incubation |
-| Liconic STX-110 (4°C) | Reagent storage |
-| Liconic LPX-220 | Room Temperature Storage |
-| PAA KX-2 | Robotic arm (plate transport) |
-
----
-
-## Key Contacts
-
-- **Carter Allen** — carter@monomerbio.com (Track 2A, overall)
-- **Carmen Kivisild** — carmen.kivisild@elnora.ai (Track 1, Elnora)
-- **Rick Wierenga** — rick@retro.bio (Track 2B)
