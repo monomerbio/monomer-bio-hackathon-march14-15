@@ -19,7 +19,8 @@ You'll get a **24-well deep well plate** to use as your stock plate. Assign one 
 
 **Transfer limit: max 40 transfers per iteration.** With 8 experimental wells and 4 components, that's 32 transfers — leaving room for a control well of pure base media. Plan your well layout and dilutions before you start.
 
-Submit your plate layout to a Monomer team member. We'll prepare the stock solutions and load the plate onto the workcell, registering it with a tag you'll use in your workflow.
+Fill out [`REAGENT_PLATE.md`](./REAGENT_PLATE.md) and hand it to a Monomer team member.
+We'll prepare the stock solutions, load the plate, and give you a `reagent_type` tag to use in your workflow.
 
 ### Step 2: Run the closed loop
 
@@ -131,7 +132,9 @@ The workflow definition is registered **once** at session start. Each iteration 
 
 Before registering, you can call the `validate_workflow_definition_file` MCP tool to catch routine name typos and missing parameters early — check the MCP resource `guide://workflows/creation` for the exact parameter names.
 
-See `examples/basic_agent.py` for a complete working example.
+See `examples/starter_agent.py` for a clean copy-paste skeleton with two `CUSTOMIZE`
+hooks (your plate layout, your strategy). See `examples/basic_agent.py` for a complete
+gradient descent reference implementation.
 
 ```python
 import json

@@ -2,6 +2,10 @@
 
 This file gives AI coding assistants (Claude Code, Cursor, etc.) the technical context needed to help a contestant build a Track 2A closed-loop agent on the Monomer workcell.
 
+**Quick start:** Copy `track-2a-closed-loop/examples/starter_agent.py` and fill in the two
+`CUSTOMIZE` sections — your stock plate layout and your optimization strategy.
+See `track-2a-closed-loop/REAGENT_PLATE.md` to design your plate and get it loaded.
+
 ---
 
 ## Media Composition
@@ -49,13 +53,12 @@ CulturePlate        →  tracked plate with barcode, history of readings
 
 | Routine Name | Purpose | Key Parameters |
 |---|---|---|
-| **GD Iteration Combined** | Reagent transfers from stock plate → experiment wells, seed from warm well on experiment plate, pre-warm next seed well | `experiment_plate_barcode`, `reagent_type`, `transfer_array`, `seed_well`, `seed_dest_wells` |
-| **AI Scientist Compound Plate Generation** | Build a compound plate: transfer from 24-well deep well stock → 96-well flat plate | `compound_plate_barcode`, `reagent_type`, `transfer_array` |
+| **hackathon_transfer_samples** | General-purpose liquid handling across reagent / experiment / cell_culture_stock plates | `reagent_name`, `experiment_plate_barcode`, `cell_culture_stock_plate_barcode`, `transfer_array` |
 | **Measure Absorbance** | Read OD600 from a set of wells | `culture_plate_barcode`, `method_name` (`96wp_od600`), `wells_to_process` |
 
-> **`reagent_type` is a restricted field** in GD Iteration Combined — it must match a value registered on the workcell. Coordinate with the Monomer team when loading your custom stock plate to get the correct tag string.
+> **`reagent_name` is a restricted field** — it must match the tag registered on the workcell for your stock plate. Coordinate with the Monomer team when you hand off your plate layout to get the correct string.
 
-The iteration routines are wired up inside `workflow_definition_template.py`, which handles tip computation and scheduling. Don't call them directly.
+These routines are wired up inside `workflow_definition_template.py`. Don't call them directly — use `instantiate_workflow()` which handles upload and scheduling.
 
 ### Plate Barcode Convention
 ```
@@ -148,6 +151,27 @@ get_plate_observations            # Time-series OD600 readings for a plate
 export_plate_observations         # Export observations as structured data
 ```
 
+```python
+# Connect to the Monitor MCP (cloud) — use this to read OD600 observations
+monitor = McpClient("https://backend-staging.monomerbio.com")
+monitor.session_id = "dummy"  # set auth header instead of session handshake
+
+import requests
+resp = requests.post(
+    "https://backend-staging.monomerbio.com/mcp",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer YOUR_TOKEN_HERE",
+    },
+    json={"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+          "params": {"name": "get_plate_observations",
+                     "arguments": {"plate_name": "TEAM-R1-20260314"}}},
+    timeout=30,
+)
+# Or use fetch_absorbance_results() from datasets.py which handles this via
+# the Autoplat local REST API — simpler if you're already connected to Autoplat.
+```
+
 ### Install in Cursor
 ```json
 {
@@ -196,31 +220,42 @@ uuid = instantiate_workflow(
     definition_id=def_id,
     plate_barcode="GD-R1-20260314",
     extra_inputs={
-        "transfer_array":   json.dumps(transfers),      # [[src_well, dst_well, vol_uL], ...]
-        "dest_wells":       json.dumps(dest_wells),     # wells filled this iteration
+        "transfer_array":   json.dumps(transfers),      # list of dicts — see REAGENT_PLATE.md
         "monitoring_wells": json.dumps(all_wells),      # cumulative — grows each round
-        "seed_well":        "A1",                       # advances each iteration
-        "next_seed_well":   "B1",
+        "reagent_name":     "Team Alpha Stock Plate",   # tag from Monomer team
+        "cell_culture_stock_plate_barcode": "CELLS-20260314",
     },
-    reason="Iteration 1: testing Glucose=20µL, NaCl=10µL",
+    reason="Iteration 1: testing Glucose=20µL",
 )
 result = poll_workflow_completion(client, uuid, timeout_minutes=180)
 ```
 
 ### `datasets.py` — fetch OD600 results
 ```python
-from monomer.datasets import fetch_absorbance_results, parse_od_results
+from monomer.datasets import fetch_absorbance_results
 
 # column_index = iteration + 1 (col 1 = seed wells; experiments start at col 2)
-raw = fetch_absorbance_results(client, plate_barcode="GD-R1-20260314", column_index=2)
+raw = fetch_absorbance_results(client, plate_barcode="TEAM-R1-20260314", column_index=2)
 # raw = {"baseline": {"A2": 0.05, ...}, "endpoint": {"A2": 1.2, ...}}
 
-parsed = parse_od_results(raw, column_index=2)
-# parsed = {"control_od": 1.1, "center_od": 0.9, "perturbed_ods": {"Glucose": [1.3, 1.2], ...}}
+# Compute delta OD (growth) for any set of wells — works with any plate layout
+dest_wells = ["A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2"]
+od = {
+    well: raw["endpoint"].get(well, 0.0) - raw["baseline"].get(well, 0.0)
+    for well in dest_wells
+}
+# od = {"A2": 0.41, "B2": 0.63, ...}
+
+# If you're running the default gradient descent layout, parse_od_results()
+# extracts control/center/perturbation structure automatically:
+#   from monomer.datasets import parse_od_results
+#   parsed = parse_od_results(raw, column_index=2)
 ```
 
-### `transfers.py` — media composition helpers
+### `transfers.py` — helpers for the default gradient descent layout
 ```python
+# These helpers implement gradient descent with Glucose/NaCl/MgSO4.
+# You can ignore them if you're using a custom reagent plate and strategy.
 from monomer.transfers import generate_transfer_array, apply_constraints, ROWS
 
 center = {"Glucose": 20, "NaCl": 10, "MgSO4": 5}  # µL
@@ -236,6 +271,35 @@ dest_wells     = [f"{r}{column_index}" for r in ROWS]                    # ["A2"
 seed_well      = f"{ROWS[iteration - 1]}1"                               # "A1"
 next_seed_well = f"{ROWS[iteration]}1" if iteration < len(ROWS) else ""  # "B1"
 ```
+
+### Transfer array format (all strategies)
+
+Your agent produces a **list of dicts** — one dict per transfer step. No library needed.
+The routine supports three named plate types: `"reagent"`, `"experiment"`, `"cell_culture_stock"`.
+
+```python
+transfers = [
+    # Base media — new_tip "once" reuses one tip for all transfers from D1
+    {"src_plate": "reagent", "src_well": "D1", "dst_plate": "experiment", "dst_well": "A2",
+     "volume": 180, "new_tip": "once", "blow_out": True},
+    {"src_plate": "reagent", "src_well": "D1", "dst_plate": "experiment", "dst_well": "B2",
+     "volume": 160, "new_tip": "once", "blow_out": True},
+    # Supplement — one tip reused for all transfers from A1
+    {"src_plate": "reagent", "src_well": "A1", "dst_plate": "experiment", "dst_well": "B2",
+     "volume":  20, "new_tip": "once", "blow_out": True},
+    # Seed cells — always fresh tip, mix after dispensing
+    {"src_plate": "cell_culture_stock", "src_well": "A1", "dst_plate": "experiment",
+     "dst_well": "A2", "volume": 20, "post_mix_volume": 10, "post_mix_reps": 5,
+     "new_tip": "always", "blow_out": False},
+]
+```
+
+**Tip policies:** `"once"` = 1 tip per unique `(src_plate, src_well)` pair (most efficient for reagents);
+`"always"` = fresh tip every transfer; `"never"` = keep current tip.
+
+**Volumes:** P50: 1–50 µL | P200: 51–200 µL | P1000: 201–1000 µL
+
+See `track-2a-closed-loop/REAGENT_PLATE.md` for the full field reference.
 
 ---
 
