@@ -1,6 +1,6 @@
 # Monomer Bio Hackathon — AI Agent Context
 
-This file gives AI coding assistants (Claude Code, Cursor, etc.) the technical context needed to help a contestant build a Track 2A closed-loop agent on the Monomer workcell.
+This file gives AI coding assistants (Claude Code, Cursor, etc.) the technical context needed to help a contestant build a Track A closed-loop agent on the Monomer workcell.
 
 ## Platform Primitives
 
@@ -12,7 +12,7 @@ Routine             →  atomic instrument action (incubate, pipette, read)
 CulturePlate        →  tracked plate with barcode, history of readings
 ```
 
-### Available Routines (Track 2A)
+### Available Routines (Track A)
 
 | Routine Name | Purpose | Key Parameters |
 |---|---|---|
@@ -125,8 +125,7 @@ resp = requests.post(
                      "arguments": {"plate_name": "TEAM-R1-20260314"}}},
     timeout=30,
 )
-# Or use fetch_absorbance_results() from datasets.py which handles this via
-# the Autoplat local REST API — simpler if you're already connected to Autoplat.
+# Or query via the Monitor MCP get_plate_observations tool — no extra code needed.
 ```
 
 ### Install in Cursor
@@ -175,7 +174,7 @@ transfers = [
 
 **Volumes:** P50: 1–50 µL | P200: 51–200 µL | P1000: 201–1000 µL
 
-See `track-2a-closed-loop/REAGENT_PLATE.md` for the full field reference.
+See `track-a-monomer-information/REAGENT_PLATE.md` for the full field reference.
 
 ---
 
@@ -209,4 +208,4 @@ GET  /api/culture-plates/                            # All plates
 
 Headers required: `X-Monomer-Client: desktop-frontend`
 
-See `monomer/datasets.py` for a working example.
+Base URL is `http://192.168.68.55:8080`. No auth required on local network.

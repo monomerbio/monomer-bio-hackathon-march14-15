@@ -139,7 +139,7 @@ def build_definition(
     transfer_array: str = "[]",
     monitoring_wells: str = '["A2","B2","C2","D2","E2","F2","G2","H2"]',
     # ── Plate selection ────────────────────────────────────────────────────
-    reagent_name: str = "GD Compound Stock Plate",
+    reagent_name: str = "SwampMarsh Reagent Plate",
     cell_culture_stock_plate_barcode: str = "",
     # ── Monitoring window ──────────────────────────────────────────────────
     monitoring_readings: int = 9,

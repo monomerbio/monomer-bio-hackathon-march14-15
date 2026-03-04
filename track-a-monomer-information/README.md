@@ -26,7 +26,7 @@ You'll get a **24-well deep well plate** to use as your stock plate. Assign one 
 **Transfer limit: max 40 transfers per iteration.** With 8 experimental wells and 4 components, that's 32 transfers — leaving room for a control well of pure base media. Plan your well layout and dilutions before you start. This is to make sure the workcell is not locked up for extended periods of time
 
 Fill out [`REAGENT_PLATE.md`](./REAGENT_PLATE.md) and hand it to a Monomer team member.
-We'll prepare the stock solutions, load the plate, and give you a `reagent_type` tag to use in your workflow.
+We'll prepare the stock solutions, load the plate, and give you a `reagent_name` tag to use in your workflow.
 
 ## Step 3: Run an Agentic Experiment Cycle
 
@@ -50,8 +50,6 @@ If you haven't already been onboarded to the Monomer culture monitor, we will ne
 <img width="601" height="223" alt="image" src="https://github.com/user-attachments/assets/fa7ac205-624b-42e6-94dd-fb62bd90c66b" />
 
 ## Step 2: Connect to the MCP
-
-NOTE(Turner): Outside of the hackathon we should use https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp for remote/testing.
 
 ### Option A: Cursor
 
@@ -90,11 +88,8 @@ Add this to your Claude MCP config (`~/.claude.json`):
       }
     },
     "monomer-autoplat": {
-        "type": "http",
-        "url": "https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp",
-        "headers": {
-        "Authorization": "Bearer <TOKEN_FROM_MONOMER_CLOUD>"
-      }
+      "type": "http",
+      "url": "http://192.168.68.55:8080/mcp"
     }
   }
 }
@@ -112,7 +107,7 @@ The workcell speaks standard MCP (JSON-RPC 2.0 over HTTP POST). See `CLAUDE.md` 
 Ask your tool (Claude Code, Cursor, etc.) to tell you about the cloud mcp and the autoplat mcp, and what they can be used for.
 
 ### Build: Generate a Simple Transfer Routine on your test plate
-Ask Monomer Staff for the name of your `<Reagant Plate>` and `<Cell Culture Stock Plate>`.
+Ask Monomer Staff for the name of your `<Reagent Plate>` and `<Cell Culture Stock Plate>`.
 Use those inputs to modify the following: 
 ```
 Create a workflow to transfer different volumes of Novel Media from <Reagent Plate> and different percentages
@@ -140,4 +135,4 @@ We are trying to optimize for the biggest change in growth for a given media, no
 
 - **Monitoring frequency:** Minimum 5 minutes between platereader reads. Default in the template is 10 minutes (`monitoring_interval_minutes=10`), which gives a 90-minute window with 9 reads. You can go down to 5 minutes for more granular data.
 
-- **Reagent plate tag:** Your custom stock plate must be registered on the workcell with a specific `reagent_type` tag before you can use it. Coordinate with the Monomer team when you hand off your plate layout — they'll give you the tag string to use in your workflow.
+- **Reagent plate tag:** Your custom stock plate must be registered on the workcell with a specific `reagent_name` tag before you can use it. Coordinate with the Monomer team when you hand off your plate layout — they'll give you the tag string to use in your workflow.
