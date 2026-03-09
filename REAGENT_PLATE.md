@@ -113,11 +113,3 @@ transfer_array = [
 - `"never"` — keep whatever tip is currently held
 
 **Volume → pipette:** P50: 1–50 µL | P200: 51–200 µL | P1000: 201–1000 µL
-
----
-
-## Warm-up note
-
-Your stock plate lives in the **4°C fridge** between uses. Cold reagents cause a
-30–60 min growth lag. Pull the plate out while your current iteration is running
-(~90 min monitoring window) so it warms to room temp before the next run.
