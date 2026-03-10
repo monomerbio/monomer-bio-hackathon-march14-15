@@ -14,95 +14,69 @@ Use Elnora to research *V. natriegens* growth and identify which media component
 
 Come out of Phase 1 with the arc of your experiment, which components you want to use in which wells, and what stock concentrations you want.
 
-## Step 1: Set up your MCP connection
-Monomer's MCP servers are your primary method for interacting with and learning about the Monomer system. Instructions for how to set these up can be found in the [Connect to the MCP](#step-2-connect-to-the-mcp) section.
+## Step 1: Onboard to Monomer Bio
+If you haven't already been onboarded to our system, we will need your email. Monomer staff will stop by after Phase 1 to collect your information, and shortly after this you will receive an email invitation to the [Monomer Culture Monitor](https://cloud-staging.monomerbio.com/).
 
-## Step 2: Workcell Tutorial - Run a Workflow on the workcell using the Monomer MCP, to grow some cells in provided media
-Monomer Staff will provide you with an empty 96-well plate, a Reagent Plate filled with Novel Media, and a 24-well Cell Culture Stock Plate with live Vibrio Natriegens in it.
+**NOTE:** If you have a Google account, you may navigate directly to the [Culture Monitor](https://cloud-staging.monomerbio.com/), click **Log In** and then select **Continue with Google**. You will still need to give your email to Monomer Staff so that we can add you to the correct team.
 
-You will follow the Tutorial below to use the MCP to run an experiment to determine the correct seeding density to get the most growth.
+Please make sure you are fully onboarded before proceeding to the next step.
 
-## Step 3: Design your stock plate
-
-You'll get a **24-well deep well plate** to use as your stock plate. Assign one component or component mixture per well (e.g. A1 = Glucose 1M, B1 = KCl 2M, C1 = MOPS 500mM). The robot will pipette directly from these wells into your experiment plate, so stock concentration determines your working concentration range.
-
-**Transfer limit: max 40 transfers per iteration.** With 8 experimental wells and 4 components, that's 32 transfers — leaving room for a control well of pure base media. Plan your well layout and dilutions before you start. This is to make sure the workcell is not locked up for extended periods of time
-
-Fill out [`REAGENT_PLATE.md`](./REAGENT_PLATE.md) and hand it to a Monomer team member.
-We'll prepare the stock solutions, load the plate, and give you a `reagent_type` tag to use in your workflow.
-
-## Step 4: Run an Agentic Experiment Cycle
-
-Your agent:
-1. **Decides** — picks a media composition to test next (gradient descent, Bayesian optimization, etc.)
-2. **Acts** — generates a transfer array and instantiates the workflow
-3. **Waits** — the first few iterations require Monomer team approval (~a few minutes); later iterations may be pre-approved
-4. **Observes** — reads OD600 growth data; platereader runs every 5–10 minutes during the ~90 min monitoring window
-5. **Loops** — each iteration should be ~2 hours end-to-end; you get ~6–8 iterations over the hackathon
-
-# Setting up your MCP Servers
-
-There are two MCP servers you will use during the hackathon:
+## Step 2: Connect to the MCP
+Monomer's MCP servers are your primary method for interacting with and learning about the Monomer system. There are two MCP servers you will use during the hackathon:
 
 1. **Monomer Cloud MCP** - this MCP is what you will use to interact with your plate data.
 2. **Monomer Automation MCP** - this MCP is what you will use to interact with the automated workcell.
 
-## Step 1: Onboarding to Monomer Bio
-If you haven't already been onboarded to the Monomer culture monitor, we will need your email. Monomer staff will stop by after Phase 1 to collect your information and get you set up. You will receive an email invitation to the Monomer Culture Monitor, accept the invite and then navigate to the [settings page](https://cloud-staging.monomerbio.com/settings). From here, you will need to click the **Show Token** button to obtain the MCP token needed for the next step.
-
-<img width="601" height="223" alt="image" src="https://github.com/user-attachments/assets/fa7ac205-624b-42e6-94dd-fb62bd90c66b" />
-
-## Step 2: Connect to the MCP
+We have provided instructions for multiple different ways to connect to our MCP. If you are unfamiliar with these, we recommend following **Option A: Cursor**
 
 ### Option A: Cursor
-
 1. Download [Cursor](https://cursor.com/download)
-2. Open Settings → MCP
-3. (DEMO HACKATHON ONLY) Add server: `https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp` with `Authorization: Bearer <TOKEN_FROM_MONOMER_CLOUD>`
-4. (HACKATHON ONLY) Add server: `http://192.168.68.55:8080/mcp` (no auth needed on local network)
-5. For Monitor MCP (read-only cloud data), add: `https://backend-staging.monomerbio.com/mcp` with `Authorization: Bearer <TOKEN_FROM_MONOMER_CLOUD>`
-
-### Option B: Claude Code (requires subscription)
-
-1. Set up Claude Code using the instructions from their [Get Started page](https://code.claude.com/docs/en/overview#get-started).
-2. In your terminal, add your token to and then run the following command to set up the **monomer cloud** MCP:
-
-```
-claude mcp add --scope user --transport http monomer-cloud https://backend-staging.monomerbio.com/mcp --header "Authorization: Bearer <TOKEN_FROM_MONOMER_CLOUD>"
-```
-
-3. (DEMO HACKATHON ONLY) In your terminal, add your token to and then run the following command to set up the **monomer automation platform** MCP:
-
-```
-claude mcp add --scope user --transport http monomer-autoplat https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp --header "Authorization: Bearer <TOKEN_FROM_MONOMER_CLOUD>"
-```
-
-4. (HACKATHON ONLY) In your terminal, run the following command to set up the **monomer automation platform** MCP:
-
-```
-claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.55:8080/mcp
-```
-
-### Option C: Claude API
-
-(DEMO HACKATHON) Add this to your Claude MCP config (`~/.claude.json`):
-
+2. Open Cursor → Settings → Tools & MCP → Add Custom MCP
+3. Replace the text in this file with the following:
 ```json
 {
   "mcpServers": {
     "monomer-cloud": {
       "type": "http",
-      "url": "https://backend-staging.monomerbio.com/mcp",
-      "headers": {
-        "Authorization": "Bearer <TOKEN_FROM_MONOMER_CLOUD>"
-      }
+      "url": "https://backend-staging.monomerbio.com/mcp"
     },
     "monomer-autoplat": {
-        "type": "http",
-        "url": "https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp",
-        "headers": {
-        "Authorization": "Bearer <TOKEN_FROM_MONOMER_CLOUD>"
-      }
+      "type": "http",
+      "url": "http://192.168.68.55:8080/mcp"
+    }
+  }
+}
+```
+4. Save and close this file.
+5. Next to monomer-cloud in the settings, click 'Connect' and go through the authentication flow.
+
+### Option B: Claude Code (requires subscription)
+
+1. Set up Claude Code using the instructions from their [Get Started page](https://code.claude.com/docs/en/overview#get-started).
+2. In your terminal, run the following command to set up the **monomer cloud** MCP:
+```bash
+claude mcp add --scope user --transport http monomer-cloud https://backend-staging.monomerbio.com/mcp
+```
+3. In your terminal, run the following command to set up the **monomer automation platform** MCP:
+```bash
+claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.55:8080/mcp
+```
+4. Open a new claude session (type `claude` in your terminal to start).
+5. Type `/mcp` and navigate to monomer-cloud using arrow keys. Press enter twice, and then follow the authentication flow in your browser.
+
+### Option C: Claude API
+
+Add the following to your Claude MCP config (`~/.claude.json`):
+```json
+{
+  "mcpServers": {
+    "monomer-cloud": {
+      "type": "http",
+      "url": "https://backend-staging.monomerbio.com/mcp"
+    },
+    "monomer-autoplat": {
+      "type": "http",
+      "url": "http://192.168.68.55:8080/mcp"
     }
   }
 }
@@ -112,12 +86,17 @@ claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.
 
 The workcell speaks standard MCP (JSON-RPC 2.0 over HTTP POST). See `CLAUDE.md` for the full tool list and MCP Resources (DSL guides, schema references, and a working example workflow your AI can read directly).
 
-## Workcell Tutorial
+## Step 3: Workcell Tutorial: Grow Cells with an Automated Workflow via Monomer MCP
+
+Monomer Staff will provide you with an empty 96-well plate, a Reagent Plate filled with Novel Media, and a 24-well Cell Culture Stock Plate with live Vibrio Natriegens in it.
+
+You will complete the following steps to use the MCP to run an experiment to determine the correct seeding density to get the most growth:
 
 ### Start: Explore the MCPs
-Ask your tool (Claude Code, Cursor, etc.) to tell you about the cloud mcp and the autoplat mcp, and what they can be used for.
 
-### Build: Generate a Simple Transfer Routine on your test plate
+Ask your MCP client (Claude Code, Cursor, etc.) to tell you about the cloud MCP and the automation MCP, and what they can be used for.
+
+### Build: Generate a Simple Transfer Workflow on your test plate
 Ask Monomer Staff for the name of your `<Reagent Plate>` and `<Cell Culture Stock Plate>`.
 Use those inputs to modify the following prompt: 
 ```
@@ -129,8 +108,26 @@ after the transfer routine, then every 10 minutes. Instantiate the workflow once
 ```
 And then paste this into cursor, claude code, or the MCP client of your choice.
 
-### Analyze: Ask Monomer Cloud for data and poll it to build a graph of Delta OD600 in Streamlit that continuously updates
-We are trying to optimize for the biggest change in growth for a given media, not just Max OD600, so it behooves us to capture this delta. Once your plate has finished the liquid handling step, your workflow will continuously take plate reads. You should be able to log in to our staging [Culture Monitor](https://cloud-staging.monomerbio.com/) to view your plate data.
+### Analyze: Ask Monomer Cloud for data to help build a graph of Delta OD600 in Streamlit that continuously updates
+We are trying to optimize for the biggest change in growth for a given media, not just Max OD600, so it behooves us to capture this delta. Once your plate has finished the liquid handling step, your workflow will continuously take plate reads. You can log in to our staging [Culture Monitor](https://cloud-staging.monomerbio.com/) to view your plate data.
+
+## Step 4: Design your stock plate
+
+You'll get a **24-well deep well plate** to use as your stock plate. Assign one component or component mixture per well (e.g. A1 = Glucose 1M, B1 = KCl 2M, C1 = MOPS 500mM). The robot will pipette directly from these wells into your experiment plate, so stock concentration determines your working concentration range.
+
+**Transfer limit: max 40 transfers per iteration.** With 8 experimental wells and 4 components, that's 32 transfers — leaving room for a control well of pure base media. Plan your well layout and dilutions before you start. This is to make sure the workcell is not locked up for extended periods of time
+
+Fill out [`REAGENT_PLATE.md`](./REAGENT_PLATE.md) and hand it to a Monomer team member.
+We'll prepare the stock solutions, load the plate, and give you a `reagent_type` tag to use in your workflow.
+
+## Step 5: Run an Agentic Experiment Cycle
+
+Your agent:
+1. **Decides** — picks a media composition to test next (gradient descent, Bayesian optimization, etc.)
+2. **Acts** — generates a transfer array and instantiates the workflow
+3. **Waits** — the first few iterations require Monomer team approval (~a few minutes); later iterations may be pre-approved
+4. **Observes** — reads OD600 growth data; platereader runs every 5–10 minutes during the ~90 min monitoring window
+5. **Loops** — each iteration should be ~2 hours end-to-end; you get ~6–8 iterations over the hackathon
 
 ## Workcell Constraints
 
