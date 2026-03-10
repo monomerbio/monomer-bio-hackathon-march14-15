@@ -56,13 +56,38 @@ If you haven't already been onboarded to the Monomer culture monitor, we will ne
 
 ### Option A: Cursor
 
+#### Using Bearer Token (Manual)
+
 1. Download [Cursor](https://cursor.com/download)
 2. Open Settings → MCP
-3. (DEMO HACKATHON ONLY) Add server: `https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp` with `Authorization: Bearer <TOKEN_FROM_MONOMER_CLOUD>`
+3. (DEMO HACKATHON ONLY) Add server: `http://192.168.68.55:8080/mcp` with `Authorization: Bearer <TOKEN_FROM_MONOMER_CLOUD>`
 4. (HACKATHON ONLY) Add server: `http://192.168.68.55:8080/mcp` (no auth needed on local network)
 5. For Monitor MCP (read-only cloud data), add: `https://backend-staging.monomerbio.com/mcp` with `Authorization: Bearer <TOKEN_FROM_MONOMER_CLOUD>`
 
+#### Using OAuth Flow (Recommended)
+
+Add this to your Cursor MCP config (Settings → MCP → Edit Config):
+
+```json
+{
+  "mcpServers": {
+    "monomer-cloud": {
+      "type": "http",
+      "url": "https://backend-staging.monomerbio.com/mcp"
+    },
+    "monomer-autoplat": {
+      "type": "http",
+      "url": "http://192.168.68.55:8080/mcp"
+    }
+  }
+}
+```
+
+After adding the config, a **Connect** button will appear next to each server. Click it to authenticate with Monomer Bio via your browser.
+
 ### Option B: Claude Code (requires subscription)
+
+#### Using Bearer Token (Manual)
 
 1. Set up Claude Code using the instructions from their [Get Started page](https://code.claude.com/docs/en/overview#get-started).
 2. In your terminal, add your token to and then run the following command to set up the **monomer cloud** MCP:
@@ -74,7 +99,7 @@ claude mcp add --scope user --transport http monomer-cloud https://backend-stagi
 3. (DEMO HACKATHON ONLY) In your terminal, add your token to and then run the following command to set up the **monomer automation platform** MCP:
 
 ```
-claude mcp add --scope user --transport http monomer-autoplat https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp --header "Authorization: Bearer <TOKEN_FROM_MONOMER_CLOUD>"
+claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.55:8080/mcp --header "Authorization: Bearer <TOKEN_FROM_MONOMER_CLOUD>"
 ```
 
 4. (HACKATHON ONLY) In your terminal, run the following command to set up the **monomer automation platform** MCP:
@@ -82,6 +107,26 @@ claude mcp add --scope user --transport http monomer-autoplat https://desktop-nr
 ```
 claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.55:8080/mcp
 ```
+
+#### Using OAuth Flow (Recommended)
+
+OAuth flow allows you to authenticate via browser without manually copying tokens.
+
+1. Set up Claude Code using the instructions from their [Get Started page](https://code.claude.com/docs/en/overview#get-started).
+
+2. Run the following command to set up **monomer-cloud** MCP with OAuth:
+
+```bash
+claude mcp add --transport http monomer-cloud https://backend-staging.monomerbio.com/mcp
+```
+
+3. (HACKATHON ONLY) Run the following command to set up **monomer-autoplat** MCP with OAuth:
+
+```bash
+claude mcp add --transport http monomer-autoplat http://192.168.68.55:8080/mcp
+```
+
+When you first use the MCP tools, Claude Code will open a browser window for you to authenticate with Monomer Bio. OAuth discovery is handled automatically by the MCP server, and your credentials will be securely stored and refreshed.
 
 ### Option C: Claude API
 
@@ -99,7 +144,7 @@ claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.
     },
     "monomer-autoplat": {
         "type": "http",
-        "url": "https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp",
+        "url": "http://192.168.68.55:8080/mcp",
         "headers": {
         "Authorization": "Bearer <TOKEN_FROM_MONOMER_CLOUD>"
       }
