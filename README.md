@@ -17,7 +17,7 @@ Come out of Phase 1 with the arc of your experiment, which components you want t
 ## Step 1: Onboard to Monomer Bio
 If you haven't already been onboarded to our system, we will need your email. Monomer staff will stop by after Phase 1 to collect your information, and shortly after this you will receive an email invitation to the [Monomer Culture Monitor](https://cloud-staging.monomerbio.com/).
 
-**NOTE:** If you have a google account, you may navigate directly to the [Culture Monitor](https://cloud-staging.monomerbio.com/), click **Log In** and then select **Continue with Google**. You will still need to give your email to Monomer Staff so that we can add you to the correct team.
+**NOTE:** If you have a Google account, you may navigate directly to the [Culture Monitor](https://cloud-staging.monomerbio.com/), click **Log In** and then select **Continue with Google**. You will still need to give your email to Monomer Staff so that we can add you to the correct team.
 
 Please make sure you are fully onboarded before proceeding to the next step.
 
@@ -54,15 +54,15 @@ We have provided instructions for multiple different ways to connect to our MCP.
 
 1. Set up Claude Code using the instructions from their [Get Started page](https://code.claude.com/docs/en/overview#get-started).
 2. In your terminal, run the following command to set up the **monomer cloud** MCP:
-```
+```bash
 claude mcp add --scope user --transport http monomer-cloud https://backend-staging.monomerbio.com/mcp
 ```
 3. In your terminal, run the following command to set up the **monomer automation platform** MCP:
-```
+```bash
 claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.55:8080/mcp
 ```
 4. Open a new claude session (type `claude` in your terminal to start).
-5. Type `/mcp` and navigate to monomer-cloud using arrow keys. Press enter twice, and then follow the authenticaiton flow in your browser.
+5. Type `/mcp` and navigate to monomer-cloud using arrow keys. Press enter twice, and then follow the authentication flow in your browser.
 
 ### Option C: Claude API
 
