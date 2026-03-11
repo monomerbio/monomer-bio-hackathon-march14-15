@@ -42,7 +42,7 @@ We have provided instructions for multiple different ways to connect to our MCP.
     },
     "monomer-autoplat": {
       "type": "http",
-      "url": "http://192.168.68.55:8080/mcp"
+      "url": "http://192.168.68.60:8080/mcp"
     }
   }
 }
@@ -59,7 +59,7 @@ claude mcp add --scope user --transport http monomer-cloud https://backend-stagi
 ```
 3. In your terminal, run the following command to set up the **monomer automation platform** MCP:
 ```bash
-claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.55:8080/mcp
+claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.60:8080/mcp
 ```
 4. Open a new claude session (type `claude` in your terminal to start).
 5. Type `/mcp` and navigate to monomer-cloud using arrow keys. Press enter twice, and then follow the authentication flow in your browser.
@@ -76,7 +76,7 @@ Add the following to your Claude MCP config (`~/.claude.json`):
     },
     "monomer-autoplat": {
       "type": "http",
-      "url": "http://192.168.68.55:8080/mcp"
+      "url": "http://192.168.68.60:8080/mcp"
     }
   }
 }
