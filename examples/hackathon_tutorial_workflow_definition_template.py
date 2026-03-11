@@ -174,7 +174,7 @@ def build_definition(
     workflow.add_routine(
         "read_cell_stock_baseline",
         RoutineReference(
-            routine_name="Measure Absorbance",
+            routine_name="Measure Cell Culture Stock Absorbance",
             routine_parameters={
                 "culture_plate_barcode": cell_culture_stock_plate_barcode,
                 "method_name": "24wp_od600",
@@ -183,9 +183,9 @@ def build_definition(
     )
 
     workflow.add_routine(
-        "read_experiment_blank",
+        "read_experiment_baseline",
         RoutineReference(
-            routine_name="Measure Absorbance",
+            routine_name="Measure Experiment Plate Absorbance",
             routine_parameters={
                 "culture_plate_barcode": plate_barcode,
                 "method_name": "96wp_od600",
@@ -222,7 +222,7 @@ def build_definition(
     )
     workflow.add_time_constraint(
         MoreThanConstraint(
-            from_start="read_experiment_blank",
+            from_start="read_experiment_baseline",
             to_start="seed_plate",
             value=Time("0 minutes"),
         )
@@ -239,7 +239,7 @@ def build_definition(
         workflow.add_routine(
             key,
             RoutineReference(
-                routine_name="Measure Absorbance",
+                routine_name="Measure Experiment Plate Absorbance",
                 routine_parameters={
                     "culture_plate_barcode": plate_barcode,
                     "method_name": "96wp_od600",
@@ -250,7 +250,7 @@ def build_definition(
         monitoring_keys.append(key)
 
     workflow.space_out_routines(monitoring_keys, Time(f"{_MONITORING_INTERVAL_MINUTES} minutes"))
-
+    
     # First monitoring read starts 30 seconds after seeding completes
     workflow.add_time_constraint(
         MoreThanConstraint(

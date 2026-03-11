@@ -22,7 +22,7 @@ HOW TO USE
        uuid = instantiate_workflow(
            client,
            definition_id=def_id,
-           plate_barcode="TEAM-R1-20260314",
+           plate_barcode="TEAM-ALPHA-20260314",
            extra_inputs={
                "transfer_array":   json.dumps(my_transfers),
                "monitoring_wells": json.dumps(all_wells_so_far),
@@ -139,18 +139,19 @@ def build_definition(
     transfer_array: str = "[]",
     monitoring_wells: str = '["A2","B2","C2","D2","E2","F2","G2","H2"]',
     # ── Plate selection ────────────────────────────────────────────────────
-    reagent_name: str = "GD Compound Stock Plate",
+    reagent_name: str = "Team Alpha Stock Plate",
     cell_culture_stock_plate_barcode: str = "",
     # ── Monitoring window ──────────────────────────────────────────────────
     monitoring_readings: int = 9,
     monitoring_interval_minutes: int = 10,
 ) -> WorkflowDefinitionDescriptor:
-    """Hackathon closed-loop iteration: liquid handling → OD600 monitoring.
+    f"""Hackathon closed-loop iteration: liquid handling → OD600 monitoring.
 
     Register this definition once per session; instantiate it per iteration
     by passing fresh inputs to instantiate_workflow().
 
     One complete iteration:
+      Phase 0 - Establish baseline OD600 of the cell culture stock plate and experiment plate.
       Phase 1 — Liquid handling: execute transfer_array on the Opentrons Flex.
                  Plates are unlid only if referenced in transfer_array.
       Phase 2 — OD600 monitoring: read absorbance at fixed intervals for
@@ -188,6 +189,28 @@ def build_definition(
         ),
     )
 
+    # Phase 0: Establish baseline OD600 of the cell culture stock plate and experiment plate.
+    workflow.add_routine(
+        "read_cell_stock_baseline",
+        RoutineReference(
+            routine_name="Measure Cell Culture Stock Absorbance",
+            routine_parameters={
+                "culture_plate_barcode": cell_culture_stock_plate_barcode,
+                "method_name": "24wp_od600",
+            },
+        ),
+    )
+    workflow.add_routine(
+        "read_experiment_baseline",
+        RoutineReference(
+            routine_name="Measure Experiment Plate Absorbance",
+            routine_parameters={
+                "culture_plate_barcode": plate_barcode,
+                "method_name": "96wp_od600",
+                "wells_to_process": monitoring_well_list,
+            },
+        ),
+    )
     # Phase 1: Liquid handling
     # Executes the transfer array on the Opentrons Flex. Supports any combination
     # of reagent → experiment, cell_culture_stock → experiment, or intra-plate
@@ -211,7 +234,7 @@ def build_definition(
         workflow.add_routine(
             key,
             RoutineReference(
-                routine_name="Measure Absorbance",
+                routine_name="Measure Experiment Plate Absorbance",
                 routine_parameters={
                     "culture_plate_barcode": plate_barcode,
                     "method_name":           "96wp_od600",
