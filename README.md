@@ -6,7 +6,7 @@
 
 ---
 
-# Step 0: Onboard to Monomer Bio
+# Setup: Onboard to Monomer Bio
 
 If you haven't already been onboarded to our system, we will need your email. Monomer staff will stop by after Phase 1 to collect your information, and shortly after this you will receive an email invitation to the [Monomer Culture Monitor](https://cloud-staging.monomerbio.com/).
 
