@@ -38,7 +38,7 @@ We have provided instructions for multiple different ways to connect to our MCP.
     },
     "monomer-autoplat": {
       "type": "http",
-      "url": "http://192.168.68.55:8080/mcp"
+      "https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp"
     }
   }
 }
