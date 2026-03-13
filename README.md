@@ -59,7 +59,7 @@ claude mcp add --scope user --transport http monomer-cloud https://backend-stagi
 1. In your terminal, run the following command to set up the **monomer automation platform** MCP:
 
 ```bash
-claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.55:8080/mcp
+claude mcp add --scope user --transport http monomer-autoplat https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp
 ```
 
 1. Open a new claude session (type `claude` in your terminal to start).
@@ -87,6 +87,8 @@ Add the following to your Claude MCP config (`~/.claude.json`):
 ### Option D: Any MCP-compatible tool
 
 The workcell speaks standard MCP (JSON-RPC 2.0 over HTTP POST). See `CLAUDE.md` for the full tool list and MCP Resources (DSL guides, schema references, and a working example workflow your AI can read directly).
+
+# Tutorial
 
 ## Part 1: Workcell Tutorial: Grow Cells with an Automated Workflow via Monomer MCP
 
