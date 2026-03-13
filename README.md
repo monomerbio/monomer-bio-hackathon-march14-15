@@ -38,7 +38,7 @@ We have provided instructions for multiple different ways to connect to our MCP.
     },
     "monomer-autoplat": {
       "type": "http",
-      "https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp"
+      "url": "https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp"
     }
   }
 }
@@ -78,7 +78,7 @@ Add the following to your Claude MCP config (`~/.claude.json`):
     },
     "monomer-autoplat": {
       "type": "http",
-      "url": "http://192.168.68.55:8080/mcp"
+      "url": "https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp"
     }
   }
 }
