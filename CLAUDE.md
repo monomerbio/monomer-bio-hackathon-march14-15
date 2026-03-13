@@ -1,6 +1,6 @@
 # Monomer Bio Hackathon — AI Agent Context
 
-This file gives AI coding assistants (Claude Code, Cursor, etc.) the technical context needed to help a contestant build a Track 2A closed-loop agent on the Monomer workcell.
+This file gives AI coding assistants (Claude Code, Cursor, etc.) the technical context needed to help a contestant build a Track A closed-loop agent on the Monomer workcell.
 
 ## Platform Primitives
 
@@ -12,12 +12,13 @@ Routine             →  atomic instrument action (incubate, pipette, read)
 CulturePlate        →  tracked plate with barcode, history of readings
 ```
 
-### Available Routines (Track 2A)
+### Available Routines (Track A)
 
 | Routine Name | Purpose | Key Parameters |
 |---|---|---|
 | **Hackathon Transfer Samples** | General-purpose liquid handling across reagent / experiment / cell_culture_stock plates | `reagent_name`, `experiment_plate_barcode`, `cell_culture_stock_plate_barcode`, `transfer_array` |
-| **Measure Absorbance** | Read OD600 from a set of wells | `culture_plate_barcode`, `method_name` (`96wp_od600`), `wells_to_process` |
+| **Measure Experiment Plate Absorbance** | Read OD600 from a 96-well experiment plate | `culture_plate_barcode`, `method_name` (`96wp_od600`), `wells_to_process` |
+| **Measure Cell Culture Stock Absorbance** | Read OD600 from a 24-well cell culture stock plate | `culture_plate_barcode`, `method_name` (`24wp_od600`), `wells_to_process` |
 
 > **`reagent_name` is a restricted field** — it must match the tag registered on the workcell for your stock plate. Coordinate with the Monomer team when you hand off your plate layout to get the correct string.
 
@@ -39,7 +40,6 @@ These routines are wired up inside `workflow_definition_template.py`. Don't call
 list_workflow_definitions         # All registered workflow definitions
 get_workflow_definition           # Detailed info about a specific definition
 get_workflow_definition_schedule  # Scheduled nodes with relative execution times
-get_workflow_definition_dag       # DAG structure showing nodes and dependencies
 list_workflow_definition_files    # Workflow definition files on disk
 get_workflow_dsl_schemas          # Simplified schemas for DSL classes
 create_workflow_definition_file   # Upload a workflow .py file to workcell
@@ -186,7 +186,7 @@ See `track-2a-closed-loop/REAGENT_PLATE.md` for the full field reference.
 | Max concurrent workflows | 1 (sequential scheduling) |
 | Max transfers per iteration | 40 (`_MAX_TRANSFERS` in template) |
 | Platereader minimum interval | 5 minutes (default in template: 10 min) |
-| Well volume | 180 µL |
+| Suggested final volume | 200 µL |
 | Incubation temperature | 37°C |
 | Tip reuse policy | Base media well (D1) reuses 1 tip; all other source wells use fresh tips |
 | P50 range | 1–50 µL |
