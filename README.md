@@ -104,7 +104,11 @@ Ask Monomer Staff for the name of your `<Reagent Plate>` and `<Cell Culture Stoc
 Use those inputs to modify the following prompt: 
 
 ```
-Create a workflow to transfer different volumes of Novel Media from <Reagent Plate> and different percentages
+Before creating the workflow, I need you to double check that the wells you choose to transfer from in the <Reagent Plate> contain reagents (Novel Media) in them so that the experiment can work properly. This should be done using a tool from monomer-autoplat to get the latest status and details on the reagent plate.
+
+On top of that, help me check that the well you use to transfer cell stock from on the plate <Cell Culture Stock Plate> has enough culture stock available.
+
+Once that is done, create a workflow to transfer different volumes of Novel Media from <Reagent Plate> and different percentages
 of cell stock solution from well A1 of <Cell Culture Stock Plate> into different wells of the 96-well
 experiment plate using the hackathon_transfer_samples Routine, make triplicates of percentages from 50% to 5%;
 measure absorbance of the plate immediately before the transfer routine and then immediately
