@@ -29,7 +29,7 @@ These routines are wired up inside `workflow_definition_template.py`. Don't call
 ## MCP Connection
 
 ### Autoplat MCP (Workcell — workflow control)
-- **URL:** `http://192.168.68.55:8080/mcp`
+- **URL:** `http://192.168.68.60:8080/mcp`
 - **Auth:** None (local network)
 - **Transport:** JSON-RPC 2.0 over HTTP POST with SSE response
 
@@ -133,14 +133,13 @@ resp = requests.post(
 ```json
 {
   "mcpServers": {
-    "monomer-autoplat": {
-      "url": "http://192.168.68.55:8080/mcp"
+    "monomer-cloud": {
+      "type": "http",
+      "url": "https://backend-staging.monomerbio.com/mcp"
     },
-    "monomer-monitor": {
-      "url": "https://backend-staging.monomerbio.com/mcp",
-      "headers": {
-        "Authorization": "Bearer YOUR_TOKEN_HERE"
-      }
+    "monomer-autoplat": {
+      "type": "http",
+      "url": "http://192.168.68.60:8080/mcp"
     }
   }
 }
@@ -175,7 +174,7 @@ transfers = [
 
 **Volumes:** P50: 1–50 µL | P200: 51–200 µL | P1000: 201–1000 µL
 
-See `track-2a-closed-loop/REAGENT_PLATE.md` for the full field reference.
+See the transfer array format above for the full field reference.
 
 ---
 
@@ -208,5 +207,3 @@ GET  /api/culture-plates/                            # All plates
 ```
 
 Headers required: `X-Monomer-Client: desktop-frontend`
-
-See `monomer/datasets.py` for a working example.

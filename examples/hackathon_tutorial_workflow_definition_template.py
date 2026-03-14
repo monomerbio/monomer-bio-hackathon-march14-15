@@ -35,7 +35,7 @@ Register this file once at the start of your session:
     from monomer.mcp_client import McpClient
     from monomer.workflows import register_workflow
 
-    client = McpClient("http://192.168.68.55:8080")
+    client = McpClient("http://192.168.68.60:8080")
     def_id = register_workflow(client, Path("hackathon_tutorial_workflow_definition_template.py"))
 
 Then instantiate it with your plate barcodes:
@@ -128,7 +128,7 @@ def _build_transfer_array() -> list[dict]:
                     "dst_well": f"{row}{col}",
                     "volume": cell_vol,
                     "new_tip": "always",
-                    "blow_out": True,
+                    "blow_out": False,
                     "post_mix_volume": 50,
                     "post_mix_reps": 3,
                 }
