@@ -113,8 +113,8 @@ On top of that, help me check that the well you use to transfer cell stock from 
 Once that is done, create a workflow to transfer different volumes of Novel Media from <Reagent Plate> and different percentages
 of cell stock solution from well A1 of <Cell Culture Stock Plate> into different wells of the 96-well
 experiment plate using the hackathon_transfer_samples Routine, make triplicates of percentages from 50% to 5%;
-measure absorbance of the plate immediately before the transfer routine and then immediately
-after the transfer routine, then every 10 minutes. Instantiate the workflow once it is validated.
+measure absorbance of the plate immediately after the transfer routine (no need to measure before),
+then every 10 minutes. Instantiate the workflow once it is validated.
 ```
 
 And then paste this into cursor, claude code, or the MCP client of your choice.
