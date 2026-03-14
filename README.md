@@ -38,14 +38,14 @@ We have provided instructions for multiple different ways to connect to our MCP.
     },
     "monomer-autoplat": {
       "type": "http",
-      "url": "https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp"
+      "url": "http://192.168.68.60:8080/mcp"
     }
   }
 }
 ```
 
-1. Save and close this file.
-2. Next to monomer-cloud in the settings, click 'Connect' and go through the authentication flow.
+4. Save and close this file.
+5. Next to monomer-cloud in the settings, click 'Connect' and go through the authentication flow.
 
 ### Option B: Claude Code (requires subscription)
 
@@ -56,14 +56,14 @@ We have provided instructions for multiple different ways to connect to our MCP.
 claude mcp add --scope user --transport http monomer-cloud https://backend-staging.monomerbio.com/mcp
 ```
 
-1. In your terminal, run the following command to set up the **monomer automation platform** MCP:
+3. In your terminal, run the following command to set up the **monomer automation platform** MCP:
 
 ```bash
-claude mcp add --scope user --transport http monomer-autoplat https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp
+claude mcp add --scope user --transport http monomer-autoplat http://192.168.68.60:8080/mcp
 ```
 
-1. Open a new claude session (type `claude` in your terminal to start).
-2. Type `/mcp` and navigate to monomer-cloud using arrow keys. Press enter twice, and then follow the authentication flow in your browser.
+4. Open a new claude session (type `claude` in your terminal to start).
+5. Type `/mcp` and navigate to monomer-cloud using arrow keys. Press enter twice, and then follow the authentication flow in your browser.
 
 ### Option C: Claude API
 
@@ -78,7 +78,7 @@ Add the following to your Claude MCP config (`~/.claude.json`):
     },
     "monomer-autoplat": {
       "type": "http",
-      "url": "https://desktop-nrh3hvl.tapir-decibel.ts.net/mcp"
+      "url": "http://192.168.68.60:8080/mcp"
     }
   }
 }
