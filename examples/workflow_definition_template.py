@@ -1,4 +1,4 @@
-"""Hackathon closed-loop workflow definition template — Track 2A.
+"""Hackathon closed-loop workflow definition template — Track A.
 
 IMPORTANT: This file is uploaded to and executed on the workcell, not run locally.
 The imports below (src.platform, src.workflows) only resolve inside the workcell
@@ -12,7 +12,7 @@ HOW TO USE
        from monomer.mcp_client import McpClient
        from monomer.workflows import register_workflow
 
-       client = McpClient("http://192.168.68.55:8080")
+       client = McpClient("http://192.168.68.60:8080")
        def_id = register_workflow(client, Path("workflow_definition_template.py"))
 
 2. Each iteration, instantiate with your agent's outputs:
@@ -40,7 +40,7 @@ WHAT YOUR AGENT MUST PRODUCE EACH ITERATION
                                  post_mix_volume?, post_mix_reps?}
                     plate names: "reagent" | "experiment" | "cell_culture_stock"
                     new_tip: "always" | "once" | "never"
-                    Max 40 entries. See REAGENT_PLATE.md for the full field reference.
+                    Max 40 entries. See the transfer array format in CLAUDE.md for the full field reference.
 
   monitoring_wells  JSON list of ALL experiment plate wells to read via OD600.
                     CUMULATIVE — include every well from all prior iterations too.
@@ -115,7 +115,7 @@ def _validate(transfers: list[dict], monitoring_well_list: list[str]) -> None:
     for i, t in enumerate(transfers):
         assert isinstance(t, dict), (
             f"Transfer [{i}] is not a dict. "
-            "transfer_array must be a JSON list of dicts — see REAGENT_PLATE.md."
+            "transfer_array must be a JSON list of dicts — see CLAUDE.md for the format."
         )
         vol = t.get("volume", 0)
         assert isinstance(vol, (int, float)) and vol > 0, (
